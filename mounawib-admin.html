@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>مناوب — لوحة الإدارة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet"/>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyDvqa8fLAm6sabL6uU3Bn-yvhE2FUcZyLA",
+      authDomain: "mounaweb-5fc1b.firebaseapp.com",
+      projectId: "mounaweb-5fc1b",
+      storageBucket: "mounaweb-5fc1b.firebasestorage.app",
+      messagingSenderId: "56241284867",
+      appId: "1:56241284867:web:acfe51187106f51af1ab36"
+    });
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+  </script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Cairo', sans-serif;
+  background: #080c10;
+  color: #f0f4f8;
+  min-height: 100vh;
+}
+
+/* ── Login ── */
+#loginWall {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at center, #0d1f14 0%, #080c10 70%);
+}
+.login-card {
+  background: #111820;
+  border: 1px solid #1e2d3d;
+  border-radius: 24px;
+  padding: 40px 36px;
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  box-shadow: 0 0 60px #00e67615;
+}
+.login-logo {
+  width: 70px; height: 70px;
+  background: linear-gradient(135deg, #0f2a1a, #0a1f13);
+  border: 2px solid #00e676;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 30px #00e67640;
+  font-size: 1.8rem;
+}
+.login-title { font-size: 1.5rem; font-weight: 900; color: #00e676; }
+.login-sub { font-size: 0.85rem; color: #4a6278; text-align: center; }
+.login-input {
+  width: 100%;
+  background: #1a2535;
+  border: 1.5px solid #1e2d3d;
+  border-radius: 14px;
+  padding: 14px 18px;
+  color: #f0f4f8;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  text-align: center;
+  letter-spacing: 4px;
+}
+.login-input:focus { border-color: #00e676; box-shadow: 0 0 0 3px #00e67618; }
+.login-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #00c853, #00e676);
+  border: none; border-radius: 14px;
+  padding: 15px;
+  color: #000; font-size: 1rem; font-weight: 900;
+  font-family: inherit; cursor: pointer;
+  transition: transform .2s;
+}
+.login-btn:hover { transform: scale(1.02); }
+.login-err { color: #ff5252; font-size: 0.85rem; display: none; }
+
+/* ── Shell ── */
+#shell { display: none; }
+.topbar {
+  background: #0d1117;
+  border-bottom: 1px solid #1e2d3d;
+  padding: 16px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.topbar-title { font-size: 1.25rem; font-weight: 900; color: #00e676; }
+.topbar-sub { font-size: 0.78rem; color: #4a6278; margin-top: 2px; }
+.logout-btn {
+  background: #ff525215;
+  border: 1px solid #ff525230;
+  border-radius: 10px;
+  padding: 8px 18px;
+  color: #ff5252; font-family: inherit;
+  font-size: 0.85rem; font-weight: 700;
+  cursor: pointer;
+}
+
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+
+/* ── Tabs ── */
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 28px;
+  background: #0d1117;
+  border: 1px solid #1e2d3d;
+  border-radius: 16px;
+  padding: 6px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 12px;
+  border: none; border-radius: 12px;
+  font-family: inherit; font-size: 0.9rem; font-weight: 700;
+  cursor: pointer;
+  color: #4a6278;
+  background: transparent;
+  transition: all .2s;
+}
+.tab-btn.active {
+  background: #00e676;
+  color: #000;
+  box-shadow: 0 0 20px #00e67630;
+}
+
+/* ── Section ── */
+.section { display: none; }
+.section.active { display: block; }
+
+/* ── Form Card ── */
+.form-card {
+  background: #111820;
+  border: 1px solid #1e2d3d;
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 28px;
+}
+.form-card h2 {
+  font-size: 1.1rem; font-weight: 900;
+  color: #00e676; margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #1e2d3d;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.form-grid.full { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 7px; }
+.field label {
+  font-size: 0.8rem; font-weight: 700; color: #8fa3b8;
+}
+.field input, .field select, .field textarea {
+  background: #1a2535;
+  border: 1.5px solid #1e2d3d;
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #f0f4f8;
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color .2s;
+  width: 100%;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  border-color: #00e676;
+  box-shadow: 0 0 0 3px #00e67612;
+}
+.field select option { background: #1a2535; }
+
+/* حالة مفتوح / مغلق */
+.status-toggle {
+  display: flex;
+  gap: 10px;
+}
+.status-opt {
+  flex: 1;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2px solid #1e2d3d;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all .2s;
+  background: transparent;
+  color: #4a6278;
+  font-family: inherit;
+}
+.status-opt.open-opt.selected {
+  border-color: #00e676;
+  background: #00e67615;
+  color: #00e676;
+}
+.status-opt.closed-opt.selected {
+  border-color: #ff5252;
+  background: #ff525215;
+  color: #ff5252;
+}
+
+.coords-row { display: flex; gap: 10px; }
+.coords-row .field { flex: 1; }
+
+.hint { font-size: 0.72rem; color: #4a6278; margin-top: -4px; }
+
+.submit-btn {
+  background: linear-gradient(135deg, #00c853, #00e676);
+  border: none; border-radius: 14px;
+  padding: 14px 32px;
+  color: #000; font-size: 0.95rem; font-weight: 900;
+  font-family: inherit; cursor: pointer;
+  margin-top: 8px;
+  transition: transform .2s, box-shadow .2s;
+}
+.submit-btn:hover { transform: scale(1.02); box-shadow: 0 0 20px #00e67640; }
+.form-status {
+  margin-top: 10px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  display: none;
+}
+
+/* ── Pharmacy List ── */
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.list-header h2 { font-size: 1.1rem; font-weight: 900; color: #f0f4f8; }
+.refresh-btn {
+  background: #00e67615;
+  border: 1px solid #00e67630;
+  border-radius: 10px;
+  padding: 8px 18px;
+  color: #00e676; font-family: inherit;
+  font-size: 0.82rem; font-weight: 700;
+  cursor: pointer;
+}
+
+.pharm-card {
+  background: #111820;
+  border: 1px solid #1e2d3d;
+  border-radius: 18px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  transition: border-color .2s;
+}
+.pharm-card:hover { border-color: #00e67630; }
+.pharm-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.pharm-icon.open-icon { background: #00e67612; border: 1px solid #00e67630; }
+.pharm-icon.closed-icon { background: #ff525212; border: 1px solid #ff525230; }
+
+.pharm-info { flex: 1; min-width: 0; }
+.pharm-name { font-size: 1rem; font-weight: 800; color: #f0f4f8; margin-bottom: 6px; }
+.pharm-meta {
+  display: flex; gap: 10px; flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.pharm-tag {
+  font-size: 0.72rem; font-weight: 700;
+  padding: 3px 10px; border-radius: 99px;
+}
+.tag-open  { background: #00e67615; color: #00e676; border: 1px solid #00e67625; }
+.tag-closed{ background: #ff525215; color: #ff5252; border: 1px solid #ff525225; }
+.tag-city  { background: #1a2535; color: #8fa3b8; border: 1px solid #1e2d3d; }
+.tag-phone { background: #1a2535; color: #8fa3b8; border: 1px solid #1e2d3d; }
+.tag-coords{ background: #1a2535; color: #4a6278; border: 1px solid #1e2d3d; font-size: 0.68rem; }
+
+.pharm-actions { display: flex; gap: 8px; flex-shrink: 0; align-items: flex-start; }
+.action-btn {
+  padding: 7px 14px; border-radius: 10px;
+  font-family: inherit; font-size: 0.78rem; font-weight: 700;
+  cursor: pointer; border: none;
+  transition: all .2s;
+}
+.btn-toggle-open  { background: #00e67615; color: #00e676; border: 1px solid #00e67625; }
+.btn-toggle-open:hover  { background: #00e676; color: #000; }
+.btn-toggle-closed { background: #ff525215; color: #ff5252; border: 1px solid #ff525225; }
+.btn-toggle-closed:hover { background: #ff5252; color: #fff; }
+.btn-delete { background: #ff525210; color: #ff5252; border: 1px solid #ff525220; }
+.btn-delete:hover { background: #ff5252; color: #fff; }
+
+.loading-msg { color: #4a6278; font-size: 0.9rem; text-align: center; padding: 32px; }
+.empty-msg { color: #4a6278; font-size: 0.9rem; text-align: center; padding: 32px; }
+
+/* ── Pending ── */
+.pending-badge {
+  display: inline-flex; align-items: center;
+  background: #ffb30020; color: #ffb300;
+  border: 1px solid #ffb30030;
+  border-radius: 99px; padding: 3px 10px;
+  font-size: 0.72rem; font-weight: 700;
+  margin-right: 10px;
+}
+
+/* ── Stats Bar ── */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.stat-box {
+  background: #111820;
+  border: 1px solid #1e2d3d;
+  border-radius: 16px;
+  padding: 18px;
+  text-align: center;
+}
+.stat-box .n { font-size: 2rem; font-weight: 900; color: #00e676; }
+.stat-box .l { font-size: 0.78rem; color: #4a6278; margin-top: 4px; }
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 30px; left: 50%;
+  transform: translateX(-50%);
+  background: #1a2535; border: 1px solid #00e67630;
+  color: #f0f4f8; padding: 12px 24px;
+  border-radius: 99px; font-size: 0.88rem; font-weight: 700;
+  font-family: 'Cairo', sans-serif;
+  z-index: 9999; pointer-events: none;
+  opacity: 0; transition: opacity .3s;
+  white-space: nowrap;
+}
+#toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<!-- ── Login Wall ── -->
+<div id="loginWall">
+  <div class="login-card">
+    <div class="login-logo">🛡️</div>
+    <div>
+      <div class="login-title">لوحة الإدارة</div>
+      <div class="login-sub">مناوب — Mounawib Admin</div>
+    </div>
+    <input class="login-input" id="passInput" type="password" placeholder="كلمة السر"
+      onkeydown="if(event.key==='Enter') doLogin()" />
+    <div class="login-err" id="loginErr">❌ كلمة السر خاطئة</div>
+    <button class="login-btn" onclick="doLogin()">دخول</button>
+  </div>
+</div>
+
+<!-- ── Main Shell ── -->
+<div id="shell">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">💊 لوحة الإدارة — مناوب</div>
+      <div class="topbar-sub">إدارة صيدليات المناوبة في الجزائر</div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">خروج ↩</button>
+  </div>
+
+  <div class="container">
+
+    <!-- Stats -->
+    <div class="stats-bar">
+      <div class="stat-box">
+        <div class="n" id="statTotal">—</div>
+        <div class="l">إجمالي الصيدليات</div>
+      </div>
+      <div class="stat-box">
+        <div class="n" id="statOpen" style="color:#00e676;">—</div>
+        <div class="l">مفتوحة الآن</div>
+      </div>
+      <div class="stat-box">
+        <div class="n" id="statPending" style="color:#ffb300;">—</div>
+        <div class="l">طلبات انتظار</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('add', this)">➕ إضافة صيدلية</button>
+      <button class="tab-btn" onclick="switchTab('list', this)">📋 قائمة الصيدليات</button>
+      <button class="tab-btn" onclick="switchTab('pending', this)">⏳ الطلبات المعلقة</button>
+    </div>
+
+    <!-- ═══ TAB: إضافة صيدلية ═══ -->
+    <div class="section active" id="tabAdd">
+      <div class="form-card">
+        <h2>➕ إضافة صيدلية مباشرة</h2>
+
+        <div class="form-grid">
+          <div class="field">
+            <label>اسم الصيدلية *</label>
+            <input id="fName" placeholder="مثال: صيدلية النور"/>
+          </div>
+          <div class="field">
+            <label>رقم الهاتف *</label>
+            <input id="fPhone" placeholder="023 45 67 89" dir="ltr"/>
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:14px;">
+          <div class="field">
+            <label>الولاية *</label>
+            <select id="fCity">
+              <option value="">اختر الولاية *</option>
+              <option value="أدرار">01 - أدرار</option>
+              <option value="الشلف">02 - الشلف</option>
+              <option value="الأغواط">03 - الأغواط</option>
+              <option value="أم البواقي">04 - أم البواقي</option>
+              <option value="باتنة">05 - باتنة</option>
+              <option value="بجاية">06 - بجاية</option>
+              <option value="بسكرة">07 - بسكرة</option>
+              <option value="بشار">08 - بشار</option>
+              <option value="البليدة">09 - البليدة</option>
+              <option value="البويرة">10 - البويرة</option>
+              <option value="تمنراست">11 - تمنراست</option>
+              <option value="تبسة">12 - تبسة</option>
+              <option value="تلمسان">13 - تلمسان</option>
+              <option value="تيارت">14 - تيارت</option>
+              <option value="تيزي وزو">15 - تيزي وزو</option>
+              <option value="الجزائر">16 - الجزائر</option>
+              <option value="الجلفة">17 - الجلفة</option>
+              <option value="جيجل">18 - جيجل</option>
+              <option value="سطيف">19 - سطيف</option>
+              <option value="سعيدة">20 - سعيدة</option>
+              <option value="سكيكدة">21 - سكيكدة</option>
+              <option value="سيدي بلعباس">22 - سيدي بلعباس</option>
+              <option value="عنابة">23 - عنابة</option>
+              <option value="قالمة">24 - قالمة</option>
+              <option value="قسنطينة">25 - قسنطينة</option>
+              <option value="المدية">26 - المدية</option>
+              <option value="مستغانم">27 - مستغانم</option>
+              <option value="المسيلة">28 - المسيلة</option>
+              <option value="معسكر">29 - معسكر</option>
+              <option value="ورقلة">30 - ورقلة</option>
+              <option value="وهران">31 - وهران</option>
+              <option value="البيض">32 - البيض</option>
+              <option value="إليزي">33 - إليزي</option>
+              <option value="برج بوعريريج">34 - برج بوعريريج</option>
+              <option value="بومرداس">35 - بومرداس</option>
+              <option value="الطارف">36 - الطارف</option>
+              <option value="تندوف">37 - تندوف</option>
+              <option value="تيسمسيلت">38 - تيسمسيلت</option>
+              <option value="الوادي">39 - الوادي</option>
+              <option value="خنشلة">40 - خنشلة</option>
+              <option value="سوق أهراس">41 - سوق أهراس</option>
+              <option value="تيبازة">42 - تيبازة</option>
+              <option value="ميلة">43 - ميلة</option>
+              <option value="عين الدفلى">44 - عين الدفلى</option>
+              <option value="النعامة">45 - النعامة</option>
+              <option value="عين تموشنت">46 - عين تموشنت</option>
+              <option value="غرداية">47 - غرداية</option>
+              <option value="غليزان">48 - غليزان</option>
+              <option value="تيميمون">49 - تيميمون</option>
+              <option value="برج باجي مختار">50 - برج باجي مختار</option>
+              <option value="أولاد جلال">51 - أولاد جلال</option>
+              <option value="بني عباس">52 - بني عباس</option>
+              <option value="عين صالح">53 - عين صالح</option>
+              <option value="عين قزام">54 - عين قزام</option>
+              <option value="توقرت">55 - توقرت</option>
+              <option value="جانت">56 - جانت</option>
+              <option value="المغير">57 - المغير</option>
+              <option value="المنيعة">58 - المنيعة</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>وقت انتهاء المناوبة</label>
+            <input id="fCloseTime" type="time" value="07:00"/>
+          </div>
+        </div>
+
+        <!-- حالة الفتح -->
+        <div class="field" style="margin-top:14px;">
+          <label>حالة الصيدلية *</label>
+          <div class="status-toggle">
+            <button class="status-opt open-opt selected" id="btnOpen" onclick="selectStatus(true)">✅ مفتوحة الآن</button>
+            <button class="status-opt closed-opt" id="btnClosed" onclick="selectStatus(false)">🔴 مغلقة</button>
+          </div>
+        </div>
+
+        <!-- الإحداثيات -->
+        <div class="field" style="margin-top:14px;">
+          <label>📍 رابط Google Maps (لاستخراج الإحداثيات تلقائياً)</label>
+          <input id="fMapsLink" placeholder="https://maps.app.goo.gl/..." dir="ltr"
+            oninput="parseMapsLinkAdmin(this.value)"/>
+          <div id="coordsStatusAdmin" class="hint" style="display:none;"></div>
+        </div>
+
+        <div class="coords-row" style="margin-top:10px;">
+          <div class="field">
+            <label>خط العرض (Latitude) *</label>
+            <input id="fLat" placeholder="35.xxxxx" dir="ltr" type="number" step="any"/>
+          </div>
+          <div class="field">
+            <label>خط الطول (Longitude) *</label>
+            <input id="fLng" placeholder="1.xxxxx" dir="ltr" type="number" step="any"/>
+          </div>
+        </div>
+        <p class="hint" style="margin-top:6px;">💡 افتح الصيدلية في Google Maps ← اضغط مشاركة ← انسخ الرابط في الحقل أعلاه، أو أدخل الإحداثيات يدوياً</p>
+
+        <div class="field" style="margin-top:14px;">
+          <label>العنوان التفصيلي (اختياري)</label>
+          <input id="fAddress" placeholder="مثال: شارع الاستقلال، قرب المسجد الكبير"/>
+        </div>
+
+        <div style="margin-top:20px;">
+          <button class="submit-btn" onclick="addPharmacy()">💾 إضافة الصيدلية</button>
+          <div class="form-status" id="addStatus"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: قائمة الصيدليات ═══ -->
+    <div class="section" id="tabList">
+      <div class="list-header">
+        <h2>📋 جميع الصيدليات المعتمدة</h2>
+        <button class="refresh-btn" onclick="loadPharmacies()">🔄 تحديث</button>
+      </div>
+
+      <!-- فلتر سريع -->
+      <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+        <button class="action-btn btn-toggle-open" style="padding:9px 18px;" onclick="filterList('all')">الكل</button>
+        <button class="action-btn btn-toggle-open" style="padding:9px 18px;" onclick="filterList('open')">✅ مفتوحة</button>
+        <button class="action-btn btn-toggle-closed" style="padding:9px 18px;" onclick="filterList('closed')">🔴 مغلقة</button>
+      </div>
+
+      <div id="pharmList"><div class="loading-msg">⏳ انقر على "تحديث" لتحميل القائمة</div></div>
+    </div>
+
+    <!-- ═══ TAB: الطلبات المعلقة ═══ -->
+    <div class="section" id="tabPending">
+      <div class="list-header">
+        <h2>⏳ طلبات انتظار الموافقة</h2>
+        <button class="refresh-btn" onclick="loadPending()">🔄 تحديث</button>
+      </div>
+      <div id="pendingListAdmin"><div class="loading-msg">⏳ انقر "تحديث" لتحميل الطلبات</div></div>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /shell -->
+
+<div id="toast"></div>
+
+<script>
+'use strict';
+const ADMIN_PASS = 'mounawib2025';
+let isOpenStatus = true;
+let allPharmacies = [];
+
+// ── Auth ──
+async function doLogin() {
+  const v = document.getElementById('passInput').value;
+  if (v !== ADMIN_PASS) {
+    document.getElementById('loginErr').style.display = 'block';
+    return;
+  }
+  document.getElementById('loginErr').style.display = 'none';
+  const btn = document.querySelector('.login-btn');
+  btn.textContent = '⏳ جاري الاتصال...';
+  btn.disabled = true;
+  try {
+    await auth.signInAnonymously();
+    document.getElementById('loginWall').style.display = 'none';
+    document.getElementById('shell').style.display = 'block';
+    loadStats();
+  } catch(e) {
+    document.getElementById('loginErr').textContent = '❌ خطأ في الاتصال: ' + e.message;
+    document.getElementById('loginErr').style.display = 'block';
+    btn.textContent = 'دخول';
+    btn.disabled = false;
+  }
+}
+function doLogout() {
+  auth.signOut();
+  document.getElementById('passInput').value = '';
+  document.getElementById('shell').style.display = 'none';
+  document.getElementById('loginWall').style.display = 'flex';
+  document.querySelector('.login-btn').textContent = 'دخول';
+  document.querySelector('.login-btn').disabled = false;
+}
+
+// ── Tabs ──
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1)).classList.add('active');
+  if (name === 'list') loadPharmacies();
+  if (name === 'pending') loadPending();
+}
+
+// ── Status Toggle ──
+function selectStatus(open) {
+  isOpenStatus = open;
+  document.getElementById('btnOpen').classList.toggle('selected', open);
+  document.getElementById('btnClosed').classList.toggle('selected', !open);
+}
+
+// ── Parse Maps Link ──
+async function parseMapsLinkAdmin(url) {
+  const cs = document.getElementById('coordsStatusAdmin');
+  document.getElementById('fLat').value = '';
+  document.getElementById('fLng').value = '';
+  if (!url || url.length < 10) { cs.style.display = 'none'; return; }
+
+  // فحص كلمة maps
+  if (!url.toLowerCase().includes('maps')) {
+    cs.style.display = 'block';
+    cs.style.background = '#ff525215';
+    cs.style.color = '#ff5252';
+    cs.textContent = '❌ الرابط غير صحيح. تأكد من نسخه من Google Maps';
+    return;
+  }
+
+  // أنماط مباشرة
+  let m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (m) { setCoordsAdmin(m[1], m[2]); return; }
+  m = url.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (m) { setCoordsAdmin(m[1], m[2]); return; }
+  m = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+  if (m) { setCoordsAdmin(m[1], m[2]); return; }
+  m = url.match(/\/(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (m) { setCoordsAdmin(m[1], m[2]); return; }
+
+  // رابط قصير → resolve عبر proxies متعددة
+  cs.style.display = 'block';
+  cs.style.color = '#4a6278';
+  cs.textContent = '⏳ جاري استخراج الموقع...';
+
+  const proxies = [
+    `https://corsproxy.io/?${encodeURIComponent(url)}`,
+    `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+    `https://proxy.cors.sh/${url}`,
+  ];
+
+  for (const proxy of proxies) {
+    try {
+      const resp = await fetch(proxy, { signal: AbortSignal.timeout(7000) });
+      let text = '';
+      if (proxy.includes('allorigins')) {
+        const json = await resp.json();
+        text = json.contents || '';
+      } else {
+        text = await resp.text();
+      }
+      const fm = text.match(/@(-?\d+\.\d+),(-?\d+\.\d+),\d+/) ||
+                 text.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/) ||
+                 text.match(/"(-?\d+\.\d{4,}),(-?\d+\.\d{4,})"/);
+      if (fm) { setCoordsAdmin(fm[1], fm[2]); return; }
+    } catch(e) { continue; }
+  }
+
+  cs.style.display = 'block';
+  cs.style.color = '#ffb300';
+  cs.textContent = '⚠️ لم يتمكن من الاستخراج التلقائي — أدخل الإحداثيات يدوياً';
+}
+
+function setCoordsAdmin(lat, lng) {
+  document.getElementById('fLat').value = parseFloat(lat).toFixed(6);
+  document.getElementById('fLng').value = parseFloat(lng).toFixed(6);
+  const cs = document.getElementById('coordsStatusAdmin');
+  cs.style.display = 'block';
+  cs.style.color = '#00e676';
+  cs.textContent = `✅ تم: ${parseFloat(lat).toFixed(5)}, ${parseFloat(lng).toFixed(5)}`;
+}
+
+// ── Add Pharmacy ──
+async function addPharmacy() {
+  const name      = document.getElementById('fName').value.trim();
+  const phone     = document.getElementById('fPhone').value.trim();
+  const city      = document.getElementById('fCity').value;
+  const closeTime = document.getElementById('fCloseTime').value || '07:00';
+  const latVal    = document.getElementById('fLat').value.trim();
+  const lngVal    = document.getElementById('fLng').value.trim();
+  const address   = document.getElementById('fAddress').value.trim();
+  const statusEl  = document.getElementById('addStatus');
+
+  if (!name || !phone || !city) {
+    showFormStatus(statusEl, '⚠️ يرجى ملء: الاسم، رقم الهاتف، الولاية', '#ff5252');
+    return;
+  }
+  if (!latVal || !lngVal) {
+    showFormStatus(statusEl, '⚠️ الإحداثيات مطلوبة لتحديد موقع الصيدلية', '#ffb300');
+    return;
+  }
+
+  try {
+    await db.collection('pharmacies').add({
+      name, phone, city,
+      closeTime, address,
+      lat: parseFloat(latVal),
+      lng: parseFloat(lngVal),
+      isOpen: isOpenStatus,
+      status: 'approved',
+      addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      addedByAdmin: true,
+    });
+
+    showFormStatus(statusEl, '✅ تمت إضافة الصيدلية بنجاح!', '#00e676');
+    // Reset form
+    ['fName','fPhone','fMapsLink','fLat','fLng','fAddress'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.value = '';
+    });
+    document.getElementById('fCity').selectedIndex = 0;
+    document.getElementById('fCloseTime').value = '07:00';
+    document.getElementById('coordsStatusAdmin').style.display = 'none';
+    selectStatus(true);
+    loadStats();
+    showToast('✅ صيدلية مضافة بنجاح');
+  } catch(e) {
+    showFormStatus(statusEl, '❌ خطأ: ' + e.message, '#ff5252');
+  }
+}
+
+function showFormStatus(el, msg, color) {
+  el.textContent = msg;
+  el.style.color = color;
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 4000);
+}
+
+// ── Load Stats ──
+async function loadStats() {
+  try {
+    const approvedSnap = await db.collection('pharmacies').where('status','==','approved').get();
+    let openCount = 0;
+    approvedSnap.forEach(d => { if (d.data().isOpen !== false) openCount++; });
+    document.getElementById('statTotal').textContent = approvedSnap.size;
+    document.getElementById('statOpen').textContent = openCount;
+    const pendingSnap = await db.collection('pending_pharmacies').where('status','==','pending').get();
+    document.getElementById('statPending').textContent = pendingSnap.size;
+  } catch(e) {}
+}
+
+// ── Load Pharmacies List ──
+async function loadPharmacies() {
+  const listEl = document.getElementById('pharmList');
+  listEl.innerHTML = '<div class="loading-msg">⏳ جاري التحميل...</div>';
+  try {
+    const snap = await db.collection('pharmacies').where('status','==','approved').get();
+    allPharmacies = [];
+    snap.forEach(doc => allPharmacies.push({ id: doc.id, ...doc.data() }));
+    allPharmacies.sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ar'));
+    renderPharmacies(allPharmacies);
+  } catch(e) {
+    listEl.innerHTML = `<div class="empty-msg">❌ خطأ: ${e.message}</div>`;
+  }
+}
+
+function filterList(type) {
+  if (type === 'open')   renderPharmacies(allPharmacies.filter(p => p.isOpen !== false));
+  else if (type === 'closed') renderPharmacies(allPharmacies.filter(p => p.isOpen === false));
+  else renderPharmacies(allPharmacies);
+}
+
+function renderPharmacies(list) {
+  const listEl = document.getElementById('pharmList');
+  if (!list.length) { listEl.innerHTML = '<div class="empty-msg">لا توجد صيدليات</div>'; return; }
+  listEl.innerHTML = list.map(p => {
+    const isOpen = p.isOpen !== false;
+    return `
+    <div class="pharm-card" id="pc_${p.id}">
+      <div class="pharm-icon ${isOpen ? 'open-icon' : 'closed-icon'}">${isOpen ? '✅' : '🔴'}</div>
+      <div class="pharm-info">
+        <div class="pharm-name">${esc(p.name)}</div>
+        <div class="pharm-meta">
+          <span class="pharm-tag ${isOpen ? 'tag-open' : 'tag-closed'}">${isOpen ? '• مفتوحة' : '• مغلقة'}</span>
+          ${p.city ? `<span class="pharm-tag tag-city">📍 ${esc(p.city)}</span>` : ''}
+          ${p.phone ? `<span class="pharm-tag tag-phone">📞 ${esc(p.phone)}</span>` : ''}
+          ${p.closeTime ? `<span class="pharm-tag tag-city">⏰ حتى ${esc(p.closeTime)}</span>` : ''}
+          ${p.lat && p.lng ? `<span class="pharm-tag tag-coords">${parseFloat(p.lat).toFixed(4)}, ${parseFloat(p.lng).toFixed(4)}</span>` : '<span class="pharm-tag tag-coords" style="color:#ff5252;">⚠️ لا إحداثيات</span>'}
+        </div>
+        ${p.address ? `<div style="font-size:0.75rem;color:#4a6278;">${esc(p.address)}</div>` : ''}
+      </div>
+      <div class="pharm-actions">
+        <button class="action-btn ${isOpen ? 'btn-toggle-closed' : 'btn-toggle-open'}"
+          onclick="toggleOpen('${p.id}', ${!isOpen})">
+          ${isOpen ? '🔴 أغلق' : '✅ افتح'}
+        </button>
+        <button class="action-btn btn-delete" data-id="${p.id}" data-name="${esc(p.name)}" onclick="deletePharmacy(this)">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleOpen(id, newStatus) {
+  try {
+    await db.collection('pharmacies').doc(id).update({ isOpen: newStatus });
+    const p = allPharmacies.find(x => x.id === id);
+    if (p) p.isOpen = newStatus;
+    renderPharmacies(allPharmacies);
+    loadStats();
+    showToast(newStatus ? '✅ تم فتح الصيدلية' : '🔴 تم إغلاق الصيدلية');
+  } catch(e) { alert('خطأ: ' + e.message); }
+}
+
+async function deletePharmacy(btn) {
+  const id = btn.dataset.id;
+  const name = btn.dataset.name;
+  if (!confirm(`هل تريد حذف "${name}" نهائياً؟`)) return;
+  try {
+    await db.collection('pharmacies').doc(id).delete();
+    allPharmacies = allPharmacies.filter(p => p.id !== id);
+    renderPharmacies(allPharmacies);
+    loadStats();
+    showToast('🗑️ تم الحذف');
+  } catch(e) { alert('خطأ: ' + e.message); }
+}
+
+// ── Load Pending ──
+async function loadPending() {
+  const listEl = document.getElementById('pendingListAdmin');
+  listEl.innerHTML = '<div class="loading-msg">⏳ جاري التحميل...</div>';
+  try {
+    const snap = await db.collection('pending_pharmacies').where('status','==','pending').get();
+    if (snap.empty) { listEl.innerHTML = '<div class="empty-msg">✅ لا توجد طلبات معلقة</div>'; return; }
+    listEl.innerHTML = '';
+    snap.forEach(doc => {
+      const d = doc.data();
+      const card = document.createElement('div');
+      card.className = 'pharm-card';
+      card.id = `pend_${doc.id}`;
+      card.innerHTML = `
+        <div class="pharm-icon" style="background:#ffb30015;border:1px solid #ffb30030;">⏳</div>
+        <div class="pharm-info">
+          <div class="pharm-name">${esc(d.name)}</div>
+          <div class="pharm-meta">
+            <span class="pharm-tag" style="background:#ffb30015;color:#ffb300;border:1px solid #ffb30025;">معلق</span>
+            ${d.city ? `<span class="pharm-tag tag-city">📍 ${esc(d.city)}</span>` : ''}
+            ${d.phone ? `<span class="pharm-tag tag-phone">📞 ${esc(d.phone)}</span>` : ''}
+            <span class="pharm-tag tag-city">👤 ${esc(d.submittedBy||'مجهول')}</span>
+          </div>
+          <!-- تعديل الإحداثيات -->
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <input id="plat_${doc.id}" value="${d.lat||''}" placeholder="Lat" dir="ltr" type="number" step="any"
+              style="background:#1a2535;border:1px solid #1e2d3d;border-radius:8px;padding:8px;color:#f0f4f8;font-size:0.78rem;width:50%;outline:none;"/>
+            <input id="plng_${doc.id}" value="${d.lng||''}" placeholder="Lng" dir="ltr" type="number" step="any"
+              style="background:#1a2535;border:1px solid #1e2d3d;border-radius:8px;padding:8px;color:#f0f4f8;font-size:0.78rem;width:50%;outline:none;"/>
+          </div>
+          <!-- حالة الفتح -->
+          <div style="display:flex;gap:8px;margin-top:8px;align-items:center;">
+            <span style="font-size:0.75rem;color:#4a6278;">حالة الصيدلية:</span>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.8rem;color:#00e676;">
+              <input type="radio" name="pstatus_${doc.id}" value="open" checked style="accent-color:#00e676;"/> مفتوحة
+            </label>
+            <label style="display:flex;align-items:center;gap:5px;cursor:pointer;font-size:0.8rem;color:#ff5252;">
+              <input type="radio" name="pstatus_${doc.id}" value="closed" style="accent-color:#ff5252;"/> مغلقة
+            </label>
+          </div>
+        </div>
+        <div class="pharm-actions" style="flex-direction:column;">
+          <button class="action-btn btn-toggle-open" onclick="approvePending('${doc.id}')">✅ قبول</button>
+          <button class="action-btn btn-delete" onclick="rejectPending('${doc.id}')">❌ رفض</button>
+        </div>
+      `;
+      listEl.appendChild(card);
+    });
+  } catch(e) {
+    listEl.innerHTML = `<div class="empty-msg">❌ خطأ: ${e.message}</div>`;
+  }
+}
+
+async function approvePending(id) {
+  const latVal = parseFloat(document.getElementById('plat_'+id)?.value);
+  const lngVal = parseFloat(document.getElementById('plng_'+id)?.value);
+  if (!latVal || !lngVal) { showToast('⚠️ أدخل الإحداثيات أولاً'); return; }
+  const openRadio = document.querySelector(`input[name="pstatus_${id}"]:checked`);
+  const isOpen = openRadio ? openRadio.value === 'open' : true;
+
+  try {
+    const docRef = db.collection('pending_pharmacies').doc(id);
+    const snap = await docRef.get();
+    const d = snap.data();
+    // نسخ الحقول المطلوبة فقط — بدون status/mapsLink/submittedBy
+    await db.collection('pharmacies').add({
+      name:      d.name      || '',
+      phone:     d.phone     || '',
+      city:      d.city      || '',
+      address:   d.address   || '',
+      closeTime: d.closeTime || '07:00',
+      lat: latVal,
+      lng: lngVal,
+      isOpen,
+      status: 'approved',
+      approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    await docRef.update({ status: 'approved' });
+    document.getElementById('pend_'+id)?.remove();
+    loadStats();
+    showToast('✅ تمت الموافقة وإضافة الصيدلية');
+    const list = document.getElementById('pendingListAdmin');
+    if (!list.querySelector('.pharm-card')) {
+      list.innerHTML = '<div class="empty-msg">✅ لا توجد طلبات معلقة</div>';
+    }
+  } catch(e) { showToast('❌ خطأ: ' + e.message); }
+}
+
+async function rejectPending(id) {
+  if (!confirm('هل تريد رفض هذا الطلب؟')) return;
+  try {
+    await db.collection('pending_pharmacies').doc(id).update({ status: 'rejected' });
+    document.getElementById('pend_'+id)?.remove();
+    loadStats();
+    showToast('🗑️ تم الرفض');
+    const list = document.getElementById('pendingListAdmin');
+    if (!list.querySelector('.pharm-card')) {
+      list.innerHTML = '<div class="empty-msg">✅ لا توجد طلبات معلقة</div>';
+    }
+  } catch(e) { showToast('❌ خطأ: ' + e.message); }
+}
+
+// ── Helpers ──
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
