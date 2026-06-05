@@ -1,0 +1,3300 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>مناوب - Mounawib</title>
+  
+  <meta name="theme-color" content="#00e676" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="مناوب" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script>
+    firebase.initializeApp({
+      apiKey: "AIzaSyDvqa8fLAm6sabL6uU3Bn-yvhE2FUcZyLA",
+      authDomain: "mounaweb-5fc1b.firebaseapp.com",
+      projectId: "mounaweb-5fc1b",
+      storageBucket: "mounaweb-5fc1b.firebasestorage.app",
+      messagingSenderId: "56241284867",
+      appId: "1:56241284867:web:acfe51187106f51af1ab36"
+    });
+    const db = firebase.firestore();
+  </script>
+  <style id="leaflet-override">
+    .leaflet-container { background: #0d1117 !important; }
+    .leaflet-tile { filter: brightness(0.85) saturate(0.7); }
+    .leaflet-popup-content-wrapper { background: #111820; border: 1px solid #00e67630; border-radius: 14px; color: #f0f4f8; box-shadow: 0 0 20px #00e67620; }
+    .leaflet-popup-tip { background: #111820; }
+    .leaflet-popup-content { font-family: 'Cairo', sans-serif; font-size: 0.85rem; line-height: 1.6; }
+    #mapLeaflet { width: 100%; height: 100%; z-index: 1; }
+  </style>
+<style>
+/* ── CSS Variables ── */
+:root {
+  --bg-primary:    #080c10;
+  --bg-secondary:  #0d1117;
+  --bg-card:       #111820;
+  --bg-card2:      #131c28;
+  --bg-elevated:   #1a2535;
+  --green-main:    #00e676;
+  --green-glow:    #00e67640;
+  --green-deep:    #00b359;
+  --green-dark:    #003d1a;
+  --blue-accent:   #1565c0;
+  --blue-card:     #0d1e36;
+  --text-primary:  #f0f4f8;
+  --text-secondary:#8fa3b8;
+  --text-muted:    #4a6278;
+  --border-subtle: #1e2d3d;
+  --border-glow:   #00e67620;
+  --danger:        #ff5252;
+  --radius-sm:     10px;
+  --radius-md:     16px;
+  --radius-lg:     24px;
+  --radius-xl:     32px;
+  --shadow-green:  0 0 30px #00e67630, 0 4px 20px #00000080;
+  --shadow-card:   0 4px 24px #00000060;
+  --font-main:     'Cairo', 'Tajawal', sans-serif;
+  --transition:    0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* WHITE THEME */
+body.theme-white {
+  --bg-primary:    #f4f7fb;
+  --bg-secondary:  #ffffff;
+  --bg-card:       #eef2f8;
+  --bg-card2:      #e8eef7;
+  --bg-elevated:   #dde6f2;
+  --text-primary:  #0d1117;
+  --text-secondary:#3a5068;
+  --text-muted:    #7a96b0;
+  --border-subtle: #ccd8e8;
+  --blue-card:     #dce8f8;
+  --shadow-card:   0 4px 24px #0000001a;
+  --shadow-green:  0 0 30px #00e67620, 0 4px 20px #00000020;
+}
+body.theme-white .app-shell { background: var(--bg-primary); }
+body.theme-white .screen { background: var(--bg-primary); }
+body.theme-white #mainScreen { background: var(--bg-primary); }
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: #050810;
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+button { cursor: pointer; border: none; outline: none; background: none; font-family: inherit; }
+a { text-decoration: none; color: inherit; }
+
+/* ── App Shell ── */
+.app-shell {
+  position: fixed;
+  inset: 0;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--bg-primary);
+  overflow: hidden;
+}
+
+/* ══════════════════════════════════
+   SCREENS
+══════════════════════════════════ */
+.screen {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+  z-index: 10;
+}
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ══════════════════════════════════
+/* ══════════════════════════════════
+   SPLASH SCREEN
+══════════════════════════════════ */
+#splashScreen {
+  background: #050810;
+  justify-content: space-between;
+  align-items: center;
+  padding: 60px 32px 48px;
+  z-index: 20;
+}
+
+.splash-bg-icons { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.bg-icon { position: absolute; font-size: 2rem; opacity: 0.04; animation: floatIcon 8s ease-in-out infinite; }
+.bi-1  { top: 8%;  left: 10%; font-size: 2.5rem; animation-delay: 0s; }
+.bi-2  { top: 15%; right: 12%; font-size: 1.8rem; animation-delay: 1s; }
+.bi-3  { top: 28%; left: 5%;  font-size: 3rem;   animation-delay: 2s; }
+.bi-4  { top: 20%; right: 30%; font-size: 2rem;  animation-delay: 0.5s; }
+.bi-5  { top: 45%; left: 18%; font-size: 2.2rem; animation-delay: 3s; }
+.bi-6  { top: 55%; right: 8%; font-size: 3rem;   animation-delay: 1.5s; }
+.bi-7  { top: 68%; left: 35%; font-size: 1.6rem; animation-delay: 2.5s; }
+.bi-8  { top: 75%; right: 25%; font-size: 2rem;  animation-delay: 0.8s; }
+.bi-9  { top: 85%; left: 8%;  font-size: 2.8rem; animation-delay: 3.5s; }
+.bi-10 { top: 40%; right: 5%; font-size: 1.5rem; animation-delay: 1.2s; }
+
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%       { transform: translateY(-12px) rotate(8deg); }
+}
+
+.splash-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.splash-logo-wrap {
+  position: relative;
+  width: 130px; height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.splash-logo-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid var(--green-main);
+  animation: ringPulse 3s ease-in-out infinite;
+}
+.ring-outer { width: 130px; height: 130px; opacity: 0.08; animation-delay: 0s; }
+.ring-mid   { width: 100px; height: 100px; opacity: 0.12; animation-delay: 0.5s; }
+
+@keyframes ringPulse {
+  0%, 100% { transform: scale(1);    opacity: 0.08; }
+  50%       { transform: scale(1.05); opacity: 0.18; }
+}
+
+.splash-logo-icon {
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, #0f2a1a, #0a1f13);
+  border: 2px solid var(--green-main);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 40px #00e67650, 0 0 80px #00e67620;
+  animation: logoGlow 3s ease-in-out infinite;
+}
+@keyframes logoGlow {
+  0%, 100% { box-shadow: 0 0 30px #00e67640, 0 0 60px #00e67618; }
+  50%       { box-shadow: 0 0 50px #00e67660, 0 0 100px #00e67628; }
+}
+.splash-logo-icon svg { width: 44px; height: 44px; }
+
+.splash-title-ar {
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #00e676, #69f0ae);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+.splash-subtitle-ar { font-size: 0.95rem; color: var(--text-secondary); font-weight: 400; }
+
+.splash-bottom { width: 100%; display: flex; flex-direction: column; gap: 20px; align-items: center; }
+.splash-progress-track { width: 220px; height: 4px; background: #1a2535; border-radius: 99px; overflow: hidden; }
+.splash-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #00e676, #69f0ae); border-radius: 99px; transition: width 0.2s ease; box-shadow: 0 0 12px #00e67680; }
+.splash-tip-container { min-height: 40px; display: flex; align-items: center; justify-content: center; padding: 0 8px; }
+.splash-tip-text { font-size: 0.82rem; color: var(--text-muted); text-align: center; line-height: 1.6; animation: tipFade 0.5s ease; }
+
+@keyframes tipFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ══════════════════════════════════
+   MAIN SCREEN
+══════════════════════════════════ */
+#mainScreen { background: var(--bg-primary); overflow: hidden; }
+
+.main-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+  z-index: 50;
+  flex-shrink: 0;
+}
+
+.burger-btn {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: var(--transition);
+}
+.burger-btn:active { transform: scale(0.92); }
+.burger-btn span { display: block; width: 18px; height: 2px; background: var(--text-primary); border-radius: 2px; }
+
+.header-app-name {
+  font-size: 1.4rem;
+  font-weight: 900;
+  background: linear-gradient(135deg, #00e676, #69f0ae);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lang-toggle-btn {
+  min-width: 40px; height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--green-main);
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  letter-spacing: 0.08em;
+  transition: var(--transition);
+}
+.lang-toggle-btn:active { transform: scale(0.92); background: var(--green-dark); }
+
+/* ── SIDEBAR ── */
+.sidebar-overlay {
+  position: absolute;
+  inset: 0;
+  background: #00000090;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  backdrop-filter: blur(4px);
+}
+.sidebar-overlay.open { opacity: 1; pointer-events: all; }
+
+.sidebar {
+  position: absolute;
+  top: 0; right: 0;
+  width: 290px; height: 100%;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-subtle);
+  z-index: 201;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: -8px 0 40px #00000060;
+  overflow-y: auto;
+}
+.sidebar.open { transform: translateX(0); }
+.ltr .sidebar { right: auto; left: 0; border-left: none; border-right: 1px solid var(--border-subtle); transform: translateX(-100%); }
+.ltr .sidebar.open { transform: translateX(0); }
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 28px 20px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.sidebar-app-name { flex: 1; font-size: 1.2rem; font-weight: 800; color: var(--green-main); }
+.sidebar-close-btn {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+.sidebar-close-btn:hover { background: var(--danger); color: white; }
+
+.sidebar-nav { flex: 1; padding: 16px 12px; display: flex; flex-direction: column; gap: 4px; }
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: var(--transition);
+  cursor: pointer;
+}
+.sidebar-item:active, .sidebar-item:hover { background: var(--bg-card); color: var(--text-primary); }
+
+/* sidebar SVG icons */
+.sidebar-icon-svg {
+  width: 22px; height: 22px;
+  flex-shrink: 0;
+  color: var(--green-main);
+}
+
+.sidebar-version { padding: 16px 20px; font-size: 0.72rem; color: var(--text-muted); text-align: center; flex-shrink: 0; }
+
+/* ── SIDEBAR SETTINGS PANEL ── */
+.settings-panel {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  margin: 0 12px;
+  animation: panelSlide 0.3s ease;
+}
+@keyframes panelSlide {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.setting-label { font-size: 0.88rem; color: var(--text-secondary); font-weight: 600; }
+.toggle-switch {
+  position: relative;
+  width: 44px; height: 24px;
+  background: var(--bg-elevated);
+  border-radius: 99px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+.toggle-switch.on { background: var(--green-main); }
+.toggle-switch::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  background: white;
+  border-radius: 50%;
+  top: 2px; right: 2px;
+  transition: transform 0.3s ease;
+  box-shadow: 0 1px 4px #00000040;
+}
+.toggle-switch.on::after { transform: translateX(-20px); }
+
+/* ── SIDEBAR MODAL PANELS (Support, Terms, About) ── */
+.sidebar-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.sidebar-modal-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.sidebar-modal-box {
+  background: var(--bg-card2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: 32px 24px 40px;
+  width: 100%;
+  max-width: 430px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: modalSlideUp 0.4s cubic-bezier(0.22,1,0.36,1);
+}
+@keyframes modalSlideUp {
+  from { transform: translateY(60px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.sidebar-modal-close {
+  position: absolute;
+  top: 16px; left: 50%;
+  transform: translateX(-50%);
+  width: 40px; height: 4px;
+  background: var(--border-subtle);
+  border-radius: 99px;
+  cursor: pointer;
+}
+.modal-handle { width: 40px; height: 4px; background: var(--border-subtle); border-radius: 99px; margin: 0 auto -8px; }
+
+/* Support card */
+.support-card-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+.support-icon-wrap {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #003d1a, #006b2c);
+  border: 2px solid #00e67640;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: supportPulse 2s ease-in-out infinite;
+  box-shadow: 0 0 30px #00e67630;
+}
+@keyframes supportPulse {
+  0%, 100% { box-shadow: 0 0 20px #00e67630; transform: scale(1); }
+  50%       { box-shadow: 0 0 40px #00e67650; transform: scale(1.04); }
+}
+.support-icon-wrap svg { width: 36px; height: 36px; }
+.support-title { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); }
+.support-subtitle { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.6; }
+.support-email {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #00e67612;
+  border: 1px solid #00e67630;
+  border-radius: var(--radius-md);
+  padding: 12px 20px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--green-main);
+  direction: ltr;
+  letter-spacing: 0.02em;
+  transition: var(--transition);
+}
+.support-email:hover { background: #00e67620; }
+
+/* Terms content */
+.modal-section-title { font-size: 1.1rem; font-weight: 800; color: var(--text-primary); }
+.modal-text { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.8; }
+
+/* ══ About App ══ */
+.about-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0 4px;
+  text-align: center;
+}
+.about-logo-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.about-logo-icon {
+  width: 72px; height: 72px;
+  background: linear-gradient(145deg, #0a1f13, #0f2a1a, #0d2416);
+  border: 2px solid #00e676;
+  border-radius: 22px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 1px #00e67620, 0 0 30px #00e67640, 0 8px 32px #00000060;
+  flex-shrink: 0;
+  animation: aboutIconPulse 3s ease-in-out infinite;
+}
+@keyframes aboutIconPulse {
+  0%,100% { box-shadow: 0 0 0 1px #00e67620, 0 0 25px #00e67440, 0 8px 32px #00000060; }
+  50%      { box-shadow: 0 0 0 2px #00e67635, 0 0 50px #00e67460, 0 8px 32px #00000080; }
+}
+.about-logo-icon svg { width: 38px; height: 38px; }
+.about-app-name {
+  font-size: 2rem; font-weight: 900;
+  background: linear-gradient(135deg, #00e676, #69f0ae, #b9f6ca);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: -0.5px;
+}
+.about-tagline {
+  font-size: 0.75rem; color: var(--text-muted);
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 99px; padding: 3px 12px; display: inline-block; margin-top: 2px;
+}
+.about-desc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.9; text-align: right; }
+.about-features-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.about-feature-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.about-feature-item:active { transform: scale(0.97); border-color: #00e67640; }
+.about-feature-icon { font-size: 1.4rem; }
+.about-feature-title { font-size: 0.78rem; font-weight: 800; color: var(--text-primary); }
+.about-feature-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.5; }
+.about-version-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 12px; padding: 12px 16px;
+  font-size: 0.78rem; color: var(--text-muted);
+}
+.about-version-row strong { color: var(--green-main); font-weight: 700; }
+.about-read-more {
+  font-size: 0.82rem; color: var(--green-main); font-weight: 700;
+  cursor: pointer; display: inline-flex; align-items: center;
+  gap: 4px; margin-top: 4px; transition: opacity 0.2s;
+}
+.about-read-more:hover { opacity: 0.8; }
+
+/* ══ Developer Page ══ */
+.dev-page { display: flex; flex-direction: column; gap: 16px; }
+.dev-hero {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 8px 0;
+}
+.dev-avatar {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: linear-gradient(145deg, #0a1f13, #003d1a, #006b2c);
+  border: 3px solid #00e676;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.2rem; font-weight: 900; color: #fff;
+  box-shadow: 0 0 0 1px #00e67625, 0 0 40px #00e67645, 0 8px 32px #00000070;
+  animation: devAvatarIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+  position: relative; flex-shrink: 0;
+}
+@keyframes devAvatarIn {
+  0% { opacity: 0; transform: scale(0.7) translateY(16px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+.dev-avatar::after {
+  content: '✔';
+  position: absolute; bottom: 2px; right: 2px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: #00e676; color: #000;
+  font-size: 0.65rem; font-weight: 900;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--bg-card2);
+}
+.dev-name { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); }
+.dev-role {
+  font-size: 0.78rem; font-weight: 700; color: var(--green-main);
+  background: #00e67612; border: 1px solid #00e67625;
+  border-radius: 99px; padding: 4px 14px;
+}
+.dev-bio-card {
+  background: var(--bg-card); border: 1px solid var(--border-subtle);
+  border-radius: 16px; padding: 16px 18px;
+}
+.dev-bio-text { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.9; text-align: right; }
+.dev-bio-text strong { color: var(--text-primary); }
+.dev-bio-text .hl { color: var(--green-main); }
+.dev-skills {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+}
+.dev-skill-chip {
+  background: #00e67610; border: 1px solid #00e67628;
+  border-radius: 99px; padding: 7px 14px;
+  font-size: 0.76rem; font-weight: 700; color: var(--green-main);
+  display: flex; align-items: center; gap: 6px;
+  animation: chipIn 0.4s ease both;
+}
+@keyframes chipIn { from { opacity:0; transform: scale(0.85); } to { opacity:1; transform: scale(1); } }
+.dev-skill-chip:nth-child(1) { animation-delay: 0.1s; }
+.dev-skill-chip:nth-child(2) { animation-delay: 0.2s; }
+.dev-skill-chip:nth-child(3) { animation-delay: 0.3s; }
+.dev-skill-chip:nth-child(4) { animation-delay: 0.4s; }
+.dev-contact-btn {
+  width: 100%; padding: 15px; border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, #003d1a, #006b2c, #00c853);
+  color: #fff; font-size: 0.95rem; font-weight: 800; font-family: var(--font-main);
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  box-shadow: 0 4px 24px #00e67640;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.dev-contact-btn:active { transform: scale(0.97); }
+
+/* ── MAIN CONTENT ── */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 20px 0;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.main-content::-webkit-scrollbar { display: none; }
+
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* greeting card */
+.home-greeting-card {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 20px 22px;
+  margin-bottom: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.home-greeting-card::before {
+  content: '';
+  position: absolute;
+  top: -30px; right: -30px;
+  width: 100px; height: 100px;
+  background: radial-gradient(circle, #00e67618, transparent 70%);
+  border-radius: 50%;
+}
+.greeting-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.greeting-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00c853, #00e676);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+}
+.greeting-name { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+.greeting-sub  { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+.greeting-question {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 10px;
+  line-height: 1.35;
+}
+.greeting-question span {
+  background: linear-gradient(135deg, #00e676, #69f0ae);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* CTA Button */
+.pulse-btn-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 36px;
+  width: 240px; height: 240px;
+}
+.pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid var(--green-main);
+  animation: pulseRing 2.8s ease-out infinite;
+  pointer-events: none;
+}
+.pulse-r1 { width: 190px; height: 190px; opacity: 0.3; animation-delay: 0s; }
+.pulse-r2 { width: 220px; height: 220px; opacity: 0.15; animation-delay: 0.7s; }
+.pulse-r3 { width: 240px; height: 240px; opacity: 0.07; animation-delay: 1.4s; }
+
+@keyframes pulseRing {
+  0%   { transform: scale(0.85); opacity: 0.5; }
+  100% { transform: scale(1.1);  opacity: 0; }
+}
+
+.main-cta-btn {
+  position: relative;
+  z-index: 2;
+  width: 170px; height: 170px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #00c853, #00e676, #69f0ae);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 0 50px #00e67650, 0 8px 32px #00000070;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: ctaBreathe 3s ease-in-out infinite;
+}
+.main-cta-btn:active { transform: scale(0.93); box-shadow: 0 0 30px #00e67640, 0 4px 16px #00000060; }
+@keyframes ctaBreathe {
+  0%, 100% { box-shadow: 0 0 40px #00e67650, 0 8px 32px #00000060; }
+  50%       { box-shadow: 0 0 70px #00e67670, 0 8px 40px #00000070; }
+}
+.cta-text { font-size: 0.78rem; font-weight: 800; color: #fff; text-align: center; line-height: 1.4; padding: 0 12px; text-shadow: 0 1px 4px #00000040; }
+
+/* Quick Stats */
+.quick-stats { display: flex; gap: 12px; margin-bottom: 32px; }
+.stat-card {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.stat-num  { font-size: 1rem; font-weight: 800; color: var(--green-main); }
+.stat-label { font-size: 0.7rem; color: var(--text-muted); text-align: center; }
+
+/* Stat SVG icons */
+.stat-icon-svg { width: 26px; height: 26px; color: var(--green-main); opacity: 0.85; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  display: flex;
+  align-items: flex-end;
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-subtle);
+  padding: 8px 0 20px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 40;
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: 0.65rem;
+  font-weight: 600;
+  transition: color 0.2s ease;
+  position: relative;
+}
+.nav-item.active { color: var(--green-main); }
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 24px; height: 3px;
+  background: var(--green-main);
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 0 8px var(--green-main);
+}
+.nav-icon-svg { width: 24px; height: 24px; transition: color 0.2s ease; }
+.nav-label { font-size: 0.62rem; }
+
+/* FAB Add Button in center of bottom nav */
+.nav-fab-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+  padding-bottom: 2px;
+}
+.nav-fab-btn {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00c853, #00e676);
+  border: 3px solid var(--bg-secondary);
+  box-shadow: 0 0 24px #00e67660, 0 4px 16px #00000060;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -22px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  flex-shrink: 0;
+}
+.nav-fab-btn:active { transform: scale(0.9); box-shadow: 0 0 14px #00e67640; }
+.nav-fab-btn svg { width: 26px; height: 26px; }
+.nav-fab-label { font-size: 0.62rem; font-weight: 600; color: var(--green-main); margin-top: 2px; }
+
+/* Tab placeholders */
+.map-placeholder { display: flex; flex-direction: column; align-items: center; gap: 16px; color: var(--text-muted); }
+.map-placeholder p { font-size: 0.9rem; font-weight: 500; }
+
+/* Profile */
+.profile-section { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 20px; text-align: center; }
+.profile-avatar-wrap {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00c853, #00e676);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 24px #00e67640;
+}
+.profile-avatar-wrap svg { width: 40px; height: 40px; color: white; }
+.profile-section h3 { font-size: 1.3rem; font-weight: 800; }
+.profile-section p { font-size: 0.85rem; color: var(--text-muted); }
+.profile-login-btn {
+  margin-top: 8px;
+  padding: 13px 36px;
+  background: linear-gradient(135deg, #00c853, #00e676);
+  color: #fff;
+  border-radius: var(--radius-xl);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: var(--font-main);
+  box-shadow: 0 4px 20px #00e67640;
+  transition: var(--transition);
+}
+
+/* ══════════════════════════════════
+   RADAR SCREEN
+══════════════════════════════════ */
+#radarScreen {
+  background: var(--bg-primary);
+  align-items: center;
+  justify-content: center;
+}
+.radar-container { display: flex; flex-direction: column; align-items: center; gap: 36px; padding: 32px; width: 100%; }
+.radar-wrapper { position: relative; width: 240px; height: 240px; }
+.radar-circle { position: absolute; border-radius: 50%; border: 1px solid var(--green-main); top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.rc-1 { width: 60px;  height: 60px;  opacity: 0.7; }
+.rc-2 { width: 110px; height: 110px; opacity: 0.45; }
+.rc-3 { width: 165px; height: 165px; opacity: 0.28; }
+.rc-4 { width: 220px; height: 220px; opacity: 0.14; }
+.radar-wrapper::before, .radar-wrapper::after { content: ''; position: absolute; background: var(--green-main); opacity: 0.15; top: 50%; left: 50%; }
+.radar-wrapper::before { width: 220px; height: 1px; transform: translate(-50%, -50%); }
+.radar-wrapper::after  { width: 1px; height: 220px; transform: translate(-50%, -50%); }
+.radar-sweep { position: absolute; width: 110px; height: 110px; top: 50%; left: 50%; transform-origin: 0 0; background: conic-gradient(from 0deg, transparent 75%, #00e67620 90%, #00e67660 100%); border-radius: 0 110px 0 0; animation: radarSweep 2.5s linear infinite; }
+@keyframes radarSweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.radar-center-dot { position: absolute; width: 10px; height: 10px; background: var(--green-main); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); box-shadow: 0 0 12px var(--green-main); z-index: 5; }
+.radar-blip { position: absolute; width: 8px; height: 8px; background: var(--green-main); border-radius: 50%; box-shadow: 0 0 10px var(--green-main), 0 0 20px #00e67660; opacity: 0; animation: blipAppear 2.5s ease-in-out infinite; }
+.blip-1 { top: 28%; left: 60%; animation-delay: 0.8s; }
+.blip-2 { top: 55%; left: 30%; animation-delay: 1.4s; }
+.blip-3 { top: 38%; left: 42%; animation-delay: 2.1s; }
+@keyframes blipAppear { 0%, 100% { opacity: 0; transform: scale(0.5); } 20%, 60% { opacity: 1; transform: scale(1); } 80% { opacity: 0.5; } }
+.radar-status-text { font-size: 1rem; font-weight: 700; color: var(--green-main); text-align: center; animation: statusPulse 1.5s ease-in-out infinite; }
+@keyframes statusPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
+.radar-progress-track { width: 260px; height: 5px; background: var(--bg-elevated); border-radius: 99px; overflow: hidden; }
+.radar-progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #00c853, #69f0ae); border-radius: 99px; transition: width 0.4s ease; box-shadow: 0 0 12px #00e67680; }
+.radar-steps { display: flex; gap: 20px; align-items: center; }
+.radar-step { display: flex; flex-direction: column; align-items: center; gap: 6px; opacity: 0.3; transition: opacity 0.4s ease; font-size: 0.72rem; font-weight: 600; color: var(--text-secondary); text-align: center; max-width: 75px; }
+.radar-step.active { opacity: 1; color: var(--green-main); }
+.step-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--bg-elevated); border: 2px solid var(--text-muted); transition: var(--transition); }
+.radar-step.active .step-dot { background: var(--green-main); border-color: var(--green-main); box-shadow: 0 0 8px var(--green-main); }
+
+/* ══════════════════════════════════
+   LOCATION DENIED MODAL
+══════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: #00000090;
+  backdrop-filter: blur(8px);
+  z-index: 999;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 24px;
+}
+.modal-box {
+  background: var(--bg-card2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl) var(--radius-xl) var(--radius-md) var(--radius-md);
+  padding: 32px 28px 28px;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: modalSlideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.modal-icon { font-size: 2.8rem; }
+.modal-box h3 { font-size: 1.15rem; font-weight: 800; text-align: center; }
+.modal-box p  { font-size: 0.85rem; color: var(--text-secondary); text-align: center; line-height: 1.6; }
+.modal-btn-primary { width: 100%; padding: 14px; border-radius: var(--radius-lg); background: linear-gradient(135deg, #00c853, #00e676); color: #fff; font-size: 0.95rem; font-weight: 700; font-family: var(--font-main); box-shadow: 0 4px 20px #00e67640; transition: var(--transition); }
+.modal-btn-secondary { width: 100%; padding: 12px; border-radius: var(--radius-lg); background: var(--bg-elevated); color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; font-family: var(--font-main); transition: var(--transition); }
+
+/* ══════════════════════════════════
+   RESULTS SCREEN
+══════════════════════════════════ */
+#resultsScreen { background: var(--bg-primary); }
+.results-header { display: flex; align-items: center; gap: 12px; padding: 20px 20px 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-subtle); flex-shrink: 0; }
+.back-btn { width: 40px; height: 40px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border-subtle); color: var(--text-primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: var(--transition); }
+.back-btn:active { transform: scale(0.92); }
+.results-title { flex: 1; font-size: 1.15rem; font-weight: 800; text-align: center; }
+.results-badge { background: linear-gradient(135deg, #00c853, #00e676); color: #fff; padding: 5px 12px; border-radius: 99px; font-size: 0.78rem; font-weight: 700; box-shadow: 0 2px 12px #00e67640; white-space: nowrap; }
+.results-content { flex: 1; overflow-y: auto; padding: 0 0 24px; display: flex; flex-direction: column; gap: 0; -ms-overflow-style: none; scrollbar-width: none; }
+.results-content::-webkit-scrollbar { display: none; }
+
+/* ══ Nearest Card — ثابتة دائماً في الأعلى ══ */
+.nearest-card-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  flex-shrink: 0;
+  padding: 16px 16px 12px;
+  background: var(--bg-primary);
+  /* ظل سفلي يخفي البطاقات التي تمر تحتها */
+  box-shadow: 0 8px 24px -4px var(--bg-primary);
+}
+
+/* لون مغاير — تدرّج ذهبي/برتقالي دافئ */
+.nearest-card {
+  background: linear-gradient(145deg, #1a0a00, #2d1500, #3d1f00);
+  border: 2px solid #ff9800;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px #ff980030,
+    0 0 30px #ff980050,
+    0 0 60px #ff980020,
+    0 8px 32px #00000090;
+  animation: nearestCardIn 0.6s cubic-bezier(0.22,1,0.36,1) both;
+  position: relative;
+}
+
+/* انيميشن دخول */
+@keyframes nearestCardIn {
+  0%   { opacity: 0; transform: translateY(-20px) scale(0.96); }
+  60%  { transform: translateY(4px) scale(1.01); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* توهج نابض مستمر */
+@keyframes nearestGlow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1px #ff980030,
+      0 0 30px #ff980050,
+      0 0 60px #ff980020,
+      0 8px 32px #00000090;
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px #ff980055,
+      0 0 50px #ff980070,
+      0 0 100px #ff980030,
+      0 8px 40px #000000a0;
+  }
+}
+.nearest-card { animation: nearestCardIn 0.6s cubic-bezier(0.22,1,0.36,1) both, nearestGlow 3s ease-in-out 0.6s infinite; }
+
+/* خط متحرك في الأعلى */
+.nearest-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; right: auto;
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #ff9800, #ffcc02, transparent);
+  animation: shimmerLine 2.5s ease-in-out 0.8s infinite;
+  z-index: 2;
+}
+@keyframes shimmerLine {
+  0%   { left: -60%; }
+  100% { left: 140%; }
+}
+
+/* شارة "الأقرب" بلون مغاير */
+.nearest-badge {
+  background: linear-gradient(90deg, #ff980018, #ffcc0210);
+  border-bottom: 1px solid #ff980030;
+  padding: 10px 20px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffcc02;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* تشيبس التفاصيل بلون ذهبي */
+.detail-chip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: #ff980012;
+  border: 1px solid #ff980030;
+  border-radius: 99px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* زر التوجه بتدرج ذهبي */
+.navigate-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, #e65100, #ff9800, #ffcc02);
+  color: #1a0800;
+  border-radius: var(--radius-lg);
+  font-size: 1rem;
+  font-weight: 800;
+  font-family: var(--font-main);
+  box-shadow: 0 4px 24px #ff980060;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.navigate-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.15) 60%, transparent 70%);
+  transform: translateX(-100%);
+  animation: btnShimmer 2s ease-in-out 1s infinite;
+}
+@keyframes btnShimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+.navigate-btn:active { transform: scale(0.97); box-shadow: 0 2px 12px #ff980040; }
+
+/* قسم الصيدليات الأخرى بادينغ */
+.other-section { display: flex; flex-direction: column; gap: 12px; padding: 4px 16px 24px; margin-top: 4px; }
+
+@keyframes cardFadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+/* nearest-badge redefined above with golden theme */
+.nearest-heart-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+.nearest-heart-btn:active { transform: scale(1.3); }
+.nearest-heart-btn svg { width: 20px; height: 20px; }
+.nearest-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 12px; }
+.nearest-name-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.nearest-name { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); }
+.nearest-status { font-size: 0.8rem; font-weight: 700; color: var(--green-main); white-space: nowrap; }
+.nearest-details { display: flex; flex-wrap: wrap; gap: 8px; }
+.other-title { font-size: 0.9rem; font-weight: 700; color: var(--text-secondary); padding-right: 4px; }
+.other-list { display: flex; flex-direction: column; gap: 10px; }
+
+.pharmacy-card {
+  background: var(--blue-card);
+  border: 1px solid #1565c030;
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: var(--transition);
+  animation: cardFadeIn 0.5s ease both;
+  cursor: pointer;
+}
+.pharmacy-card:active { transform: scale(0.98); background: #0f243a; }
+.pharmacy-card-icon { width: 44px; height: 44px; border-radius: var(--radius-sm); background: #1565c020; border: 1px solid #1565c040; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.pharmacy-card-icon svg { width: 22px; height: 22px; color: #64b5f6; }
+.pharmacy-card-info { flex: 1; min-width: 0; }
+.pharmacy-card-name { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pharmacy-card-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pharmacy-status-open { font-size: 0.7rem; font-weight: 700; color: var(--green-main); }
+.pharmacy-dist { font-size: 0.72rem; color: var(--text-muted); }
+.pharmacy-time { font-size: 0.7rem; color: var(--text-muted); }
+.pharmacy-card-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.pharmacy-heart-btn { width: 32px; height: 32px; border-radius: 50%; background: #1565c015; border: 1px solid #1565c030; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+.pharmacy-heart-btn:active { transform: scale(1.2); background: #ff525220; }
+.pharmacy-heart-btn svg { width: 15px; height: 15px; }
+.pharmacy-card-nav-btn { width: 36px; height: 36px; border-radius: 50%; background: #1565c020; border: 1px solid #1565c040; color: #64b5f6; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: var(--transition); }
+.pharmacy-card-nav-btn svg { width: 16px; height: 16px; }
+.pharmacy-card-nav-btn:active { background: #1565c060; transform: scale(0.92); }
+
+/* ══════════════════════════════════
+   PHARMACY DETAIL MODAL
+══════════════════════════════════ */
+#pharmacyDetailModal {
+  position: fixed;
+  inset: 0;
+  z-index: 8000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+#pharmacyDetailModal.open {
+  opacity: 1;
+  pointer-events: all;
+}
+.detail-blur-bg {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(18px);
+  background: rgba(8,12,16,0.75);
+}
+.detail-card {
+  position: relative;
+  z-index: 1;
+  background: var(--bg-card2);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 32px 24px 28px;
+  width: 100%;
+  max-width: 390px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  animation: detailCardIn 0.35s cubic-bezier(0.22,1,0.36,1);
+  box-shadow: 0 24px 80px #00000080, 0 0 0 1px #00e67615;
+}
+@keyframes detailCardIn {
+  from { transform: scale(0.88) translateY(20px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);       opacity: 1; }
+}
+.detail-close-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+  z-index: 2;
+}
+.ltr .detail-close-btn { left: auto; right: 16px; }
+.detail-close-btn:hover { background: var(--danger); color: white; }
+.detail-header-icon {
+  width: 60px; height: 60px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #003d1a, #006b2c);
+  border: 1.5px solid #00e67630;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 20px #00e67630;
+  margin: 0 auto 4px;
+}
+.detail-header-icon svg { width: 30px; height: 30px; }
+.detail-pharmacy-name { font-size: 1.4rem; font-weight: 900; color: var(--text-primary); text-align: center; line-height: 1.3; }
+.detail-open-badge { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.detail-open-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-main); box-shadow: 0 0 8px var(--green-main); animation: dotBlink 1.5s ease-in-out infinite; }
+@keyframes dotBlink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.detail-open-text { font-size: 0.85rem; font-weight: 700; color: var(--green-main); }
+.detail-info-rows { display: flex; flex-direction: column; gap: 12px; }
+.detail-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 13px 16px;
+}
+.detail-info-icon { width: 36px; height: 36px; border-radius: var(--radius-sm); background: #00e67610; border: 1px solid #00e67625; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.detail-info-icon svg { width: 18px; height: 18px; color: var(--green-main); }
+.detail-info-content { flex: 1; min-width: 0; }
+.detail-info-label { font-size: 0.72rem; color: var(--text-muted); font-weight: 600; margin-bottom: 2px; }
+.detail-info-value { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); }
+.detail-maps-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #1565c0, #1976d2, #42a5f5);
+  color: white;
+  border-radius: var(--radius-lg);
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-family: var(--font-main);
+  box-shadow: 0 4px 20px #1565c040;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.detail-maps-btn:active { transform: scale(0.97); }
+.detail-maps-btn svg { width: 20px; height: 20px; }
+
+/* LTR */
+.ltr { direction: ltr; text-align: left; }
+.ltr .results-header { flex-direction: row-reverse; }
+.ltr .back-btn svg { transform: scaleX(-1); }
+.hidden { display: none !important; }
+
+@media (max-height: 700px) {
+  .pulse-btn-wrapper { width: 200px; height: 200px; margin-bottom: 24px; }
+  .main-cta-btn { width: 145px; height: 145px; }
+  .pulse-r1 { width: 160px; height: 160px; }
+  .pulse-r2 { width: 185px; height: 185px; }
+  .pulse-r3 { width: 200px; height: 200px; }
+  .cta-text { font-size: 0.7rem; }
+  .home-greeting-card { margin-bottom: 16px; }
+  .quick-stats { margin-bottom: 16px; }
+}
+@media (max-width: 360px) {
+  .nearest-name { font-size: 1.2rem; }
+  .detail-chip { font-size: 0.72rem; padding: 5px 9px; }
+}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<!-- SPLASH -->
+<div id="splashScreen" class="screen active">
+  <div class="splash-bg-icons">
+    <span class="bg-icon bi-1">🗺️</span><span class="bg-icon bi-2">💊</span>
+    <span class="bg-icon bi-3">📍</span><span class="bg-icon bi-4">🧭</span>
+    <span class="bg-icon bi-5">⚕️</span><span class="bg-icon bi-6">🏥</span>
+    <span class="bg-icon bi-7">📍</span><span class="bg-icon bi-8">💉</span>
+    <span class="bg-icon bi-9">🗺️</span><span class="bg-icon bi-10">🌐</span>
+  </div>
+  <div class="splash-center">
+    <div class="splash-logo-wrap">
+      <div class="splash-logo-ring ring-outer"></div>
+      <div class="splash-logo-ring ring-mid"></div>
+      <div class="splash-logo-icon">
+        <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="34" r="18" stroke="#00e676" stroke-width="3" fill="none"/>
+          <path d="M34 34h12M40 28v12" stroke="#00e676" stroke-width="3" stroke-linecap="round"/>
+          <path d="M40 52 L40 68" stroke="#00e676" stroke-width="3" stroke-linecap="round"/>
+          <path d="M32 68 Q40 58 48 68" stroke="#00e676" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+    </div>
+    <h1 class="splash-title-ar">مناوب</h1>
+    <p class="splash-subtitle-ar">اعثر على أقرب صيدلية مفتوحة</p>
+  </div>
+  <div class="splash-bottom">
+    <div class="splash-progress-track">
+      <div class="splash-progress-bar" id="splashProgressBar"></div>
+    </div>
+    <div class="splash-tip-container">
+      <p class="splash-tip-text" id="splashTip">💡 اشرب كمياتٍ كافية من الماء يومياً للحفاظ على صحتك</p>
+    </div>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box" style="gap:18px;">
+    <div class="modal-icon">👤</div>
+    <h3 data-ar="أدخل اسمك" data-en="Enter your name">أدخل اسمك</h3>
+    <input class="login-input" id="loginNameInput" type="text" placeholder="اسمك هنا..." maxlength="30"
+      style="width:100%;background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:14px 16px;color:var(--text-primary);font-family:var(--font-main);font-size:1rem;outline:none;text-align:center;"
+      onkeydown="if(event.key==='Enter') doLogin()" />
+    <button class="modal-btn-primary" onclick="doLogin()" data-ar="متابعة" data-en="Continue">متابعة</button>
+    <button class="modal-btn-secondary" onclick="closeLoginModal()" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+  </div>
+</div>
+
+<!-- MAIN SCREEN -->
+<div id="mainScreen" class="screen">
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo-mini">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+          <circle cx="20" cy="16" r="9" stroke="#00e676" stroke-width="2" fill="none"/>
+          <path d="M17 16h6M20 13v6" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
+          <path d="M20 25 L20 33" stroke="#00e676" stroke-width="2" stroke-linecap="round"/>
+          <path d="M16 33 Q20 28 24 33" stroke="#00e676" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+        </svg>
+      </div>
+      <span class="sidebar-app-name" data-ar="مناوب" data-en="Mounawib">مناوب</span>
+      <button class="sidebar-close-btn" onclick="closeSidebar()">✕</button>
+    </div>
+    <nav class="sidebar-nav">
+      <!-- Settings -->
+      <div class="sidebar-item" onclick="toggleSettingsPanel()">
+        <svg class="sidebar-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span data-ar="الإعدادات" data-en="Settings">الإعدادات</span>
+      </div>
+      <div id="settingsPanel" class="settings-panel" style="display:none;">
+        <div class="setting-row">
+          <span class="setting-label" data-ar="الثيم الفاتح" data-en="Light Theme">الثيم الفاتح</span>
+          <div class="toggle-switch" id="themeToggle" onclick="toggleTheme()"></div>
+        </div>
+        <div class="setting-row">
+          <span class="setting-label" data-ar="اللغة: عربية" data-en="Language: English" id="langSettingLabel">اللغة: عربية</span>
+          <div class="toggle-switch" id="langToggle" onclick="toggleLangFromSettings()"></div>
+        </div>
+      </div>
+
+      <!-- Support -->
+      <div class="sidebar-item" onclick="openSidebarModal('support')">
+        <svg class="sidebar-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <span data-ar="الدعم الفني" data-en="Support">الدعم الفني</span>
+      </div>
+
+      <!-- Terms -->
+      <div class="sidebar-item" onclick="openSidebarModal('terms')">
+        <svg class="sidebar-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <span data-ar="الشروط والأحكام" data-en="Terms & Conditions">الشروط والأحكام</span>
+      </div>
+
+      <!-- About -->
+      <div class="sidebar-item" onclick="openSidebarModal('about')">
+        <svg class="sidebar-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <span data-ar="عن التطبيق" data-en="About App">عن التطبيق</span>
+      </div>
+
+      <!-- Developer -->
+      <div class="sidebar-item" onclick="openSidebarModal('developer')">
+        <svg class="sidebar-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span data-ar="عن المطور" data-en="About Developer">عن المطور</span>
+      </div>
+
+      <!-- Add Pharmacy -->
+      <div class="sidebar-item" onclick="openAddPharmacyModal(); closeSidebar();" style="background:#00e67610;border:1px solid #00e67630;border-radius:14px;margin-top:4px;">
+        <svg class="sidebar-icon-svg" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+        </svg>
+        <span style="color:var(--green-main);font-weight:700;" data-ar="أضف صيدلية" data-en="Add Pharmacy">أضف صيدلية</span>
+      </div>
+    <div class="sidebar-version">v1.0.0 — مناوب</div>
+    <div style="text-align:center;margin-top:8px;">
+      <button onclick="openAdminPanel(); closeSidebar();" style="background:none;border:none;color:var(--text-muted);font-size:0.65rem;cursor:pointer;opacity:0.3;">⚙</button>
+    </div>
+  </div>
+
+  <header class="main-header">
+    <button class="burger-btn" onclick="openSidebar()">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="header-logo">
+      <span class="header-app-name" data-ar="مناوب" data-en="Mounawib">مناوب</span>
+    </div>
+    <button class="lang-toggle-btn" onclick="toggleLanguage()">
+      <span id="langLabel">EN</span>
+    </button>
+  </header>
+
+  <main class="main-content" id="homeTab">
+    <!-- Greeting Card -->
+    <div class="home-greeting-card">
+      <div class="greeting-user-row">
+        <div class="greeting-avatar" id="greetingAvatar">م</div>
+        <div>
+          <div class="greeting-name" id="greetingName">مناوب</div>
+          <div class="greeting-sub" data-ar="مساء الخير 🌙" data-en="Good evening 🌙">مساء الخير 🌙</div>
+        </div>
+      </div>
+      <div class="greeting-question" data-ar="هل تبحث عن <span>صيدلية مفتوحة</span>؟" data-en="Looking for an <span>open pharmacy</span>?">هل تبحث عن <span>صيدلية مفتوحة</span>؟</div>
+    </div>
+
+    <div class="pulse-btn-wrapper">
+      <div class="pulse-ring pulse-r1"></div>
+      <div class="pulse-ring pulse-r2"></div>
+      <div class="pulse-ring pulse-r3"></div>
+      <button class="main-cta-btn" onclick="startSearch()">
+        <div class="cta-icon">
+          <svg viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg" width="52" height="52">
+            <circle cx="30" cy="24" r="13" stroke="white" stroke-width="2.5" fill="none"/>
+            <path d="M25 24h10M30 19v10" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M30 37 L30 50" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M22 50 Q30 41 38 50" stroke="white" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <span class="cta-text" data-ar="دلني لأقرب صيدلية مفتوحة" data-en="Find Nearest Open Pharmacy">دلني لأقرب صيدلية مفتوحة</span>
+      </button>
+    </div>
+
+    <div class="quick-stats">
+      <div class="stat-card">
+        <svg class="stat-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <span class="stat-num">24/7</span>
+        <span class="stat-label" data-ar="خدمة مستمرة" data-en="Non-stop">خدمة مستمرة</span>
+      </div>
+      <div class="stat-card">
+        <svg class="stat-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="10" r="6"/><path d="M10 10h4M12 8v4"/><path d="M12 16v6"/><path d="M8 22q4-4 8 0"/>
+        </svg>
+        <span class="stat-num" id="statPharmacies">...</span>
+        <span class="stat-label" data-ar="صيدلية مسجّلة" data-en="Pharmacies">صيدلية مسجّلة</span>
+      </div>
+      <div class="stat-card">
+        <svg class="stat-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span class="stat-num" id="statCities">...</span>
+        <span class="stat-label" data-ar="ولاية مغطّاة" data-en="Cities">ولاية مغطّاة</span>
+      </div>
+    </div>
+  </main>
+
+  <div class="tab-content" id="mapTab" style="display:none; position:relative; padding:0;">
+    <div id="mapPlaceholder" class="map-placeholder">
+      <svg style="width:56px;height:56px;opacity:0.4;color:var(--text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+      </svg>
+      <p data-ar="ابدأ بالبحث لعرض الخريطة" data-en="Start searching to view map">ابدأ بالبحث لعرض الخريطة</p>
+    </div>
+    <div id="mapLeaflet" style="display:none; width:100%; height:100%;"></div>
+  </div>
+
+  <div class="tab-content" id="favTab" style="display:none;">
+    <div id="favEmpty" class="map-placeholder">
+      <svg style="width:56px;height:56px;opacity:0.4;color:var(--text-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      <p data-ar="لا توجد صيدليات محفوظة بعد" data-en="No saved pharmacies yet">لا توجد صيدليات محفوظة بعد</p>
+    </div>
+    <div id="favList" style="display:none;width:100%;padding:4px 0 16px;display:none;flex-direction:column;gap:10px;overflow-y:auto;"></div>
+  </div>
+
+  <div class="tab-content" id="profileTab" style="display:none;">
+    <!-- قبل تسجيل الدخول -->
+    <div class="profile-section" id="profileGuest">
+      <div class="profile-avatar-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </div>
+      <h3 id="profileName" data-ar="حسابي" data-en="My Account">حسابي</h3>
+      <p data-ar="سجّل الدخول للوصول إلى جميع الميزات" data-en="Login to access all features">سجّل الدخول للوصول إلى جميع الميزات</p>
+      <button class="profile-login-btn" onclick="openLoginModal()" data-ar="تسجيل الدخول" data-en="Login">تسجيل الدخول</button>
+    </div>
+    <!-- بعد تسجيل الدخول -->
+    <div id="profileLoggedIn" style="display:none; width:100%; padding: 8px 4px 24px; display:none; flex-direction:column; gap:20px; overflow-y:auto;">
+      <!-- بطاقة الترحيب -->
+      <div style="background:linear-gradient(145deg,#003d1a,#005724,#006b2c);border:1px solid #00e67630;border-radius:24px;padding:24px 20px;text-align:center;box-shadow:0 0 30px #00e67630;">
+        <div style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,#00c853,#00e676);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:1.8rem;font-weight:900;color:#fff;box-shadow:0 0 20px #00e67650;" id="profileBigAvatar">م</div>
+        <div style="font-size:1.4rem;font-weight:900;color:#fff;margin-bottom:4px;">مرحباً، <span id="profileWelcomeName" style="background:linear-gradient(135deg,#00e676,#69f0ae);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;"></span> 👋</div>
+        <div style="font-size:0.8rem;color:#69f0ae;margin-top:4px;">أهلاً بك في مناوب</div>
+      </div>
+      <!-- الحديث النبوي -->
+      <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:20px;padding:20px 18px;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:#00e67615;border:1px solid #00e67630;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">📖</div>
+          <div style="font-size:0.78rem;font-weight:700;color:var(--green-main);">حديث شريف</div>
+        </div>
+        <p style="font-size:0.95rem;font-weight:700;color:var(--text-primary);line-height:1.8;text-align:center;font-style:italic;">
+          «الدَّالُّ على الخيرِ كفاعِلِه»
+        </p>
+        <p style="font-size:0.75rem;color:var(--text-muted);text-align:center;margin-top:8px;">رواه الترمذي</p>
+      </div>
+      <!-- تعريف بالتطبيق -->
+      <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:20px;padding:20px 18px;display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:#00e67615;border:1px solid #00e67630;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;">💊</div>
+          <div style="font-size:0.85rem;font-weight:700;color:var(--text-primary);">عن مناوب</div>
+        </div>
+        <p style="font-size:0.83rem;color:var(--text-secondary);line-height:1.85;">
+          <strong style="color:var(--green-main);">مناوب</strong> هو تطبيقك الذكي للعثور على أقرب صيدلية مناوبة مفتوحة في أي وقت من الليل أو النهار. يعتمد على موقعك الجغرافي لإيجاد الصيدليات القريبة منك فوراً، مع إمكانية التوجه إليها مباشرةً عبر خرائط Google.
+        </p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="background:#00e67612;border:1px solid #00e67625;border-radius:99px;padding:5px 12px;font-size:0.72rem;font-weight:700;color:var(--green-main);">📍 GPS دقيق</span>
+          <span style="background:#00e67612;border:1px solid #00e67625;border-radius:99px;padding:5px 12px;font-size:0.72rem;font-weight:700;color:var(--green-main);">⚡ نتائج فورية</span>
+          <span style="background:#00e67612;border:1px solid #00e67625;border-radius:99px;padding:5px 12px;font-size:0.72rem;font-weight:700;color:var(--green-main);">🕐 متاح 24/7</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('home', this)">
+      <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+      </svg>
+      <span class="nav-label" data-ar="الرئيسية" data-en="Home">الرئيسية</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('map', this)">
+      <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+      </svg>
+      <span class="nav-label" data-ar="الخريطة" data-en="Map">الخريطة</span>
+    </button>
+
+    <!-- FAB Add Button (center) -->
+    <div class="nav-fab-wrap">
+      <button class="nav-fab-btn" onclick="openAddPharmacyModal()" title="أضف صيدلية">
+        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+      </button>
+      <span class="nav-fab-label" data-ar="أضف" data-en="Add">أضف</span>
+    </div>
+
+    <button class="nav-item" onclick="switchTab('fav', this)">
+      <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+      <span class="nav-label" data-ar="مفضلاتي" data-en="Favorites">مفضلاتي</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('profile', this)">
+      <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span class="nav-label" data-ar="حسابي" data-en="Profile">حسابي</span>
+    </button>
+  </nav>
+</div>
+
+<!-- RADAR SCREEN -->
+<div id="radarScreen" class="screen">
+  <div class="radar-container">
+    <div class="radar-wrapper">
+      <div class="radar-circle rc-1"></div><div class="radar-circle rc-2"></div>
+      <div class="radar-circle rc-3"></div><div class="radar-circle rc-4"></div>
+      <div class="radar-sweep"></div>
+      <div class="radar-center-dot"></div>
+      <div class="radar-blip blip-1"></div><div class="radar-blip blip-2"></div><div class="radar-blip blip-3"></div>
+    </div>
+    <p class="radar-status-text" id="radarStatusText">جاري تحديد موقعك...</p>
+    <div class="radar-progress-track">
+      <div class="radar-progress-bar" id="radarProgressBar"></div>
+    </div>
+    <div class="radar-steps">
+      <div class="radar-step active" id="step1">
+        <div class="step-dot"></div>
+        <span data-ar="تحديد الموقع" data-en="Locating">تحديد الموقع</span>
+      </div>
+      <div class="radar-step" id="step2">
+        <div class="step-dot"></div>
+        <span data-ar="البحث" data-en="Searching">البحث</span>
+      </div>
+      <div class="radar-step" id="step3">
+        <div class="step-dot"></div>
+        <span data-ar="حساب المسافات" data-en="Distances">حساب المسافات</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LOCATION DENIED MODAL -->
+<div id="locationDeniedModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-icon">📍</div>
+    <h3 data-ar="تعذّر تحديد موقعك" data-en="Location Access Denied">تعذّر تحديد موقعك</h3>
+    <p data-ar="عفواً، لا يمكن التشغيل بدون تفعيل الموقع. يرجى السماح بالوصول إلى موقعك للمتابعة." data-en="Sorry, the app cannot work without location access. Please allow location to continue.">عفواً، لا يمكن التشغيل بدون تفعيل الموقع.</p>
+    <button class="modal-btn-primary" onclick="retryLocation()" data-ar="تفعيل الموقع مجدداً" data-en="Enable Location Again">تفعيل الموقع مجدداً</button>
+    <button class="modal-btn-secondary" onclick="closeLocationModal()" data-ar="إلغاء" data-en="Cancel">إلغاء</button>
+  </div>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="resultsScreen" class="screen">
+  <header class="results-header">
+    <button class="back-btn" onclick="goBack()">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M15 18l6-6-6-6"/><path d="M3 12h18"/>
+      </svg>
+    </button>
+    <h2 class="results-title" data-ar="نتائج البحث" data-en="Search Results">نتائج البحث</h2>
+    <div class="results-badge" id="resultsBadge">7 مفتوحة</div>
+  </header>
+  <div class="results-content" id="resultsContent" style="overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:20px;padding:16px 16px 24px;">
+    <div class="nearest-card-sticky">
+    <div class="nearest-card" id="nearestCard">
+      <div class="nearest-badge">
+        <span>👑 <span data-ar="الأقرب إليك" data-en="Nearest to you">الأقرب إليك</span></span>
+        <button class="nearest-heart-btn" id="nearestHeartBtn" onclick="toggleNearestFav()" title="إضافة للمفضلة">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ff5252" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="nearest-body">
+        <div class="nearest-name-row">
+          <h3 class="nearest-name" id="nearestName">صيدلية السلام</h3>
+          <span class="nearest-status">• مفتوحة الآن</span>
+        </div>
+        <div class="nearest-details">
+          <span class="detail-chip"><span>📍</span> <span id="nearestDist">1.2 كم</span></span>
+          <span class="detail-chip"><span>⏰</span> <span id="nearestTime">حتى 06:00</span></span>
+          <span class="detail-chip" style="cursor:pointer;" onclick="callPhone(document.getElementById('nearestPhone').textContent)"><span>📞</span> <span id="nearestPhone">023 45 67 89</span></span>
+        </div>
+        <button class="navigate-btn" onclick="navigateToNearest()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          <span data-ar="التوجه الآن" data-en="Navigate Now">التوجه الآن</span>
+        </button>
+      </div>
+    </div>
+    </div><!-- /nearest-card-sticky -->
+    <div class="other-section">
+      <h4 class="other-title" data-ar="صيدليات أخرى قريبة" data-en="Other Nearby Pharmacies">صيدليات أخرى قريبة</h4>
+      <div class="other-list" id="otherList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PHARMACY DETAIL MODAL -->
+<div id="pharmacyDetailModal">
+  <div class="detail-blur-bg" onclick="closeDetailModal()"></div>
+  <div class="detail-card">
+    <button class="detail-close-btn" onclick="closeDetailModal()">✕</button>
+    <div class="detail-header-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="10" r="6"/><path d="M10 10h4M12 8v4"/><path d="M12 16v6"/><path d="M8 22q4-4 8 0"/>
+      </svg>
+    </div>
+    <div class="detail-pharmacy-name" id="detailName">صيدلية السلام</div>
+    <div class="detail-open-badge">
+      <div class="detail-open-dot"></div>
+      <span class="detail-open-text" data-ar="مفتوحة الآن" data-en="Open Now">مفتوحة الآن</span>
+    </div>
+    <div class="detail-info-rows">
+      <div class="detail-info-row">
+        <div class="detail-info-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+        </div>
+        <div class="detail-info-content">
+          <div class="detail-info-label" data-ar="المسافة والوقت المتوقع" data-en="Distance & ETA">المسافة والوقت المتوقع</div>
+          <div class="detail-info-value" id="detailDistTime">1.2 كم — ~15 دقيقة</div>
+        </div>
+      </div>
+      <div class="detail-info-row">
+        <div class="detail-info-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.63 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6 6l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        </div>
+        <div class="detail-info-content">
+          <div class="detail-info-label" data-ar="رقم الهاتف" data-en="Phone Number">رقم الهاتف</div>
+          <div class="detail-info-value" id="detailPhone" dir="ltr" style="cursor:pointer;color:var(--green-main);" onclick="callPhone(this.textContent)">023 45 67 89</div>
+        </div>
+      </div>
+    </div>
+    <button class="detail-maps-btn" id="detailMapsBtn" onclick="openInMaps()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+      <span data-ar="فتح في خرائط Google" data-en="Open in Google Maps">فتح في خرائط Google</span>
+    </button>
+  </div>
+</div>
+
+<!-- SIDEBAR MODALS (Support / Terms / About) -->
+<div id="sidebarModalOverlay" class="sidebar-modal-overlay" onclick="closeSidebarModal(event)">
+  <div class="sidebar-modal-box" id="sidebarModalBox">
+    <div class="modal-handle"></div>
+    <div id="sidebarModalContent"></div>
+  </div>
+</div>
+
+</div><!-- /app-shell -->
+
+<script>
+'use strict';
+
+const CONFIG = {
+  SEARCH_RADIUS: 15000,
+  MAX_RESULTS: 10,
+};
+
+let state = {
+  lang: 'ar',
+  userLat: null,
+  userLng: null,
+  pharmacies: [],
+  nearestPharmacy: null,
+  currentDetailPharmacy: null,
+  userName: '',
+  theme: 'dark',
+  nearestFav: false,
+  favorites: [],
+};
+
+const healthTips = {
+  ar: [
+    '💡 اشرب كمياتٍ كافية من الماء يومياً للحفاظ على صحتك',
+    '🏃 ممارسة الرياضة 30 دقيقة يومياً تقي من كثير من الأمراض',
+    '😴 النوم الكافي (7-8 ساعات) ضروري لصحة الجسم والعقل',
+    '🥗 تناول الخضروات والفواكه الطازجة يومياً لتعزيز مناعتك',
+    '🌞 التعرض المعتدل للشمس يساعد في الحصول على فيتامين د',
+    '🧘 إدارة التوتر وممارسة التأمل تفيد صحتك النفسية والجسدية',
+    '🚭 الإقلاع عن التدخين يُحسِّن صحتك خلال أسابيع قليلة',
+    '🍎 تفاحة يومياً تُبعد الطبيب — قالها العلم قبل المثل',
+  ],
+  en: [
+    '💡 Drink enough water daily to stay healthy',
+    '🏃 30 minutes of daily exercise prevents many diseases',
+    '😴 7–8 hours of sleep is essential for body and mind health',
+    '🥗 Eat fresh vegetables and fruits daily to boost immunity',
+    '🌞 Moderate sun exposure helps get Vitamin D',
+    '🧘 Stress management and meditation benefit mental health',
+    '🚭 Quitting smoking improves your health within weeks',
+    '🍎 An apple a day keeps the doctor away!',
+  ],
+};
+
+const radarTexts = {
+  ar: ['جاري تحديد موقعك...','جاري البحث عن الصيدليات...','جاري التحقق من الصيدليات المفتوحة...','جاري حساب المسافات...','تم! جاري عرض النتائج...'],
+  en: ['Locating your position...','Searching for pharmacies...','Checking open pharmacies...','Calculating distances...','Done! Loading results...'],
+};
+
+// ── Splash ──
+let tipIndex = 0;
+function initSplash() {
+  const progressBar = document.getElementById('splashProgressBar');
+  const tipEl = document.getElementById('splashTip');
+  tipEl.textContent = healthTips[state.lang][0];
+
+  const tipInterval = setInterval(() => {
+    tipIndex = (tipIndex + 1) % healthTips[state.lang].length;
+    tipEl.style.animation = 'none';
+    void tipEl.offsetWidth;
+    tipEl.style.animation = 'tipFade 0.5s ease';
+    tipEl.textContent = healthTips[state.lang][tipIndex];
+  }, 2200);
+
+  let pct = 0;
+  const pctInterval = setInterval(() => {
+    pct += Math.random() * 6 + 2;
+    if (pct >= 100) {
+      pct = 100;
+      clearInterval(pctInterval);
+      clearInterval(tipInterval);
+      // إذا كان الاسم محفوظاً → الرئيسية مباشرة، وإلا → الرئيسية مع تلميح
+      setTimeout(() => showScreen('mainScreen'), 400);
+    }
+    progressBar.style.width = pct + '%';
+  }, 90);
+}
+
+// ── Login Modal ──
+function openLoginModal() {
+  document.getElementById('loginModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('loginNameInput').focus(), 100);
+}
+function closeLoginModal() {
+  document.getElementById('loginModal').style.display = 'none';
+}
+
+// ── Login ──
+function doLogin() {
+  const input = document.getElementById('loginNameInput');
+  const name = input.value.trim();
+  if (!name) { input.focus(); input.style.borderColor = 'var(--danger)'; return; }
+  input.style.borderColor = '';
+  closeLoginModal();
+  state.userName = name;
+  localStorage.setItem('mounawib_user', name);
+  // Update greeting card
+  const avatar = document.getElementById('greetingAvatar');
+  const greetName = document.getElementById('greetingName');
+  avatar.textContent = name.charAt(0);
+  greetName.textContent = name;
+  // Update profile logged-in section
+  const bigAvatar = document.getElementById('profileBigAvatar');
+  const welcomeName = document.getElementById('profileWelcomeName');
+  if (bigAvatar) bigAvatar.textContent = name.charAt(0);
+  if (welcomeName) welcomeName.textContent = name;
+  // Show logged-in view, hide guest view
+  const guestView = document.getElementById('profileGuest');
+  const loggedView = document.getElementById('profileLoggedIn');
+  if (guestView) guestView.style.display = 'none';
+  if (loggedView) { loggedView.style.display = 'flex'; }
+  showToast('👋 مرحباً ' + name + '!');
+}
+
+// ── Screens ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── Language ──
+function toggleLanguage() {
+  state.lang = state.lang === 'ar' ? 'en' : 'ar';
+  applyLang();
+}
+
+function toggleLangFromSettings() {
+  toggleLanguage();
+  const toggle = document.getElementById('langToggle');
+  const label  = document.getElementById('langSettingLabel');
+  toggle.classList.toggle('on', state.lang === 'en');
+  label.textContent = state.lang === 'ar' ? 'اللغة: عربية' : 'Language: English';
+}
+
+function applyLang() {
+  const isEn = state.lang === 'en';
+  document.documentElement.setAttribute('lang', state.lang);
+  document.documentElement.setAttribute('dir', isEn ? 'ltr' : 'rtl');
+  document.body.classList.toggle('ltr', isEn);
+  document.querySelector('.app-shell').classList.toggle('ltr', isEn);
+  document.getElementById('langLabel').textContent = isEn ? 'AR' : 'EN';
+  document.querySelectorAll('[data-ar][data-en]').forEach(el => {
+    const v = isEn ? el.dataset.en : el.dataset.ar;
+    if (v.includes('<')) el.innerHTML = v; else el.textContent = v;
+  });
+  const openCount = state.pharmacies.filter(p => p.open).length;
+  const closedCount = state.pharmacies.length - openCount;
+  if (state.pharmacies.length) document.getElementById('resultsBadge').textContent = isEn
+    ? `${openCount} Open · ${closedCount} Closed`
+    : `${openCount} مفتوحة · ${closedCount} مغلقة`;
+}
+
+// ── Theme ──
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'white' : 'dark';
+  document.body.classList.toggle('theme-white', state.theme === 'white');
+  document.getElementById('themeToggle').classList.toggle('on', state.theme === 'white');
+}
+
+// ── Sidebar ──
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sidebarOverlay').classList.add('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+function toggleSettingsPanel() {
+  const p = document.getElementById('settingsPanel');
+  p.style.display = p.style.display === 'none' ? 'flex' : 'none';
+}
+
+// ── Sidebar Modals ──
+const supportHTML = `
+  <div class="support-card-inner">
+    <div class="support-icon-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="36" height="36">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    </div>
+    <div class="support-title">تواصل مع المطور</div>
+    <div class="support-subtitle">نحن هنا لمساعدتك في أي وقت.<br>لا تتردد في التواصل معنا عبر البريد الإلكتروني.</div>
+    <a class="support-email" href="mailto:anasarabi122006@gmail.com">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      anasarabi122006@gmail.com
+    </a>
+  </div>`;
+
+const termsHTML = `
+  <div class="modal-section-title">الشروط والأحكام</div>
+  <div class="modal-text">
+    <strong>1. قبول الشروط</strong><br>
+    باستخدامك لتطبيق مناوب فإنك توافق على الالتزام بهذه الشروط والأحكام.<br><br>
+    <strong>2. الغرض من التطبيق</strong><br>
+    يُقدّم تطبيق مناوب خدمة إرشادية فقط للعثور على الصيدليات المناوبة القريبة. ولا يتحمل التطبيق أي مسؤولية طبية.<br><br>
+    <strong>3. الخصوصية والبيانات</strong><br>
+    يستخدم التطبيق بيانات الموقع الجغرافي لتحديد أقرب صيدلية. لا يتم تخزين أي بيانات شخصية على خوادمنا.<br><br>
+    <strong>4. دقة المعلومات</strong><br>
+    نسعى دائماً لتقديم معلومات دقيقة ومحدّثة، غير أننا لا نضمن دقة أوقات عمل الصيدليات في جميع الأوقات.<br><br>
+    <strong>5. تعديل الشروط</strong><br>
+    يحق لنا تعديل هذه الشروط في أي وقت. سيتم إعلامك بأي تغييرات جوهرية عبر التطبيق.
+  </div>`;
+
+const aboutHTML = `
+  <div class="about-hero">
+    <div class="about-logo-icon">
+      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg" width="38" height="38">
+        <circle cx="40" cy="34" r="18" stroke="#00e676" stroke-width="3" fill="none"/>
+        <path d="M34 34h12M40 28v12" stroke="#00e676" stroke-width="3" stroke-linecap="round"/>
+        <path d="M40 52 L40 68" stroke="#00e676" stroke-width="3" stroke-linecap="round"/>
+        <path d="M32 68 Q40 58 48 68" stroke="#00e676" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      </svg>
+    </div>
+    <div class="about-app-name">مناوب</div>
+    <div class="about-tagline">Mounawib · الإصدار 1.0.0</div>
+  </div>
+  <div class="about-desc">
+    منصة رقمية ذكية مصممة للحالات الطارئة والبحث الليلي السريع، تُرشدك إلى أقرب صيدلية مفتوحة في محيطك بضغطة زر واحدة.
+  </div>
+  <div class="about-features-grid">
+    <div class="about-feature-item">
+      <div class="about-feature-icon">📍</div>
+      <div class="about-feature-title">تحديد دقيق</div>
+      <div class="about-feature-desc">يحدد موقعك الفعلي ويحسب المسافات الحقيقية</div>
+    </div>
+    <div class="about-feature-item">
+      <div class="about-feature-icon">🌙</div>
+      <div class="about-feature-title">تصميم ليلي</div>
+      <div class="about-feature-desc">واجهة مريحة للعين في الظلام</div>
+    </div>
+    <div class="about-feature-item">
+      <div class="about-feature-icon">🗺️</div>
+      <div class="about-feature-title">ملاحة فورية</div>
+      <div class="about-feature-desc">ربط مباشر بـ GPS للتوجه دون تعقيد</div>
+    </div>
+    <div class="about-feature-item">
+      <div class="about-feature-icon">⚡</div>
+      <div class="about-feature-title">سرعة فائقة</div>
+      <div class="about-feature-desc">نتائج آنية بزر واحد دون انتظار</div>
+    </div>
+  </div>
+  <div class="about-version-row">
+    <span>الإصدار الحالي</span>
+    <strong>v1.0.0 — 2025</strong>
+  </div>`;
+
+function toggleAboutMore() {
+  const more = document.getElementById('aboutMoreText');
+  const btn  = document.getElementById('aboutReadMore');
+  if (!more) return;
+  const isHidden = more.style.display === 'none';
+  more.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? 'عرض أقل ▴' : 'عرض المزيد ▾';
+}
+
+const developerHTML = `
+  <div class="dev-page">
+    <div class="dev-hero">
+      <div class="dev-avatar">أ</div>
+      <div class="dev-name">أنس عرابي</div>
+      <div class="dev-role">طالب · جامعة وهران · الجزائر</div>
+    </div>
+    <div class="dev-bio-card">
+      <p class="dev-bio-text">
+        من مواليد <strong>12 جوان 2006</strong> بمدينة <strong>البيض</strong>، يدرس حالياً تخصص <span class="hl">الإعلام الآلي</span> بجامعة وهران. يتميز بروح الابتكار والإبداع، مع اهتمام خاص بمجالات التطوير الشخصي، صناعة المحتوى، والتقنيات الحديثة.
+      </p>
+    </div>
+    <div class="dev-skills">
+      <span class="dev-skill-chip">💻 تطوير تقني</span>
+      <span class="dev-skill-chip">🎨 صناعة محتوى</span>
+      <span class="dev-skill-chip">🚀 ابتكار</span>
+      <span class="dev-skill-chip">🧠 بحث علمي</span>
+    </div>
+    <a class="dev-contact-btn" href="mailto:anasarabi122006@gmail.com">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      تواصل مع المطور
+    </a>
+  </div>`;
+
+function openSidebarModal(type) {
+  const overlay = document.getElementById('sidebarModalOverlay');
+  const content = document.getElementById('sidebarModalContent');
+  if (type === 'support') content.innerHTML = supportHTML;
+  else if (type === 'terms') content.innerHTML = termsHTML;
+  else if (type === 'developer') content.innerHTML = developerHTML;
+  else content.innerHTML = aboutHTML;
+  overlay.classList.add('open');
+  closeSidebar();
+}
+
+function closeSidebarModal(e) {
+  if (e && e.target !== document.getElementById('sidebarModalOverlay')) return;
+  document.getElementById('sidebarModalOverlay').classList.remove('open');
+}
+
+// ── Map ──
+let _map = null;
+function initMap() {
+  if (!state.userLat || !state.pharmacies.length) return;
+  const placeholder = document.getElementById('mapPlaceholder');
+  const mapEl = document.getElementById('mapLeaflet');
+  if (placeholder) placeholder.style.display = 'none';
+  if (mapEl) mapEl.style.display = 'block';
+
+  if (_map) { _map.remove(); _map = null; }
+
+  _map = L.map('mapLeaflet', { zoomControl: true, attributionControl: false }).setView([state.userLat, state.userLng], 15);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(_map);
+
+  // أيقونة المستخدم
+  const userIcon = L.divIcon({
+    html: `<div style="width:16px;height:16px;border-radius:50%;background:#00e676;border:3px solid #fff;box-shadow:0 0 10px #00e67680;"></div>`,
+    iconSize: [16, 16], iconAnchor: [8, 8], className: ''
+  });
+  L.marker([state.userLat, state.userLng], { icon: userIcon }).addTo(_map)
+    .bindPopup('<strong style="color:#00e676;">📍 موقعك الحالي</strong>').openPopup();
+
+  // أيقونة الصيدليات
+  const pharmIcon = L.divIcon({
+    html: `<div style="width:32px;height:32px;border-radius:50%;background:#111820;border:2px solid #00e676;display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 0 10px #00e67640;">💊</div>`,
+    iconSize: [32, 32], iconAnchor: [16, 16], className: ''
+  });
+
+  state.pharmacies.forEach((p, i) => {
+    if (!p.lat || !p.lng) return;
+    const marker = L.marker([p.lat, p.lng], { icon: pharmIcon }).addTo(_map);
+    marker.bindPopup(`
+      <div style="min-width:160px;">
+        <div style="font-weight:700;color:#00e676;margin-bottom:6px;">${escHtml(p.name)}</div>
+        <div style="font-size:0.78rem;margin-bottom:4px;">📍 ${p.distanceText}</div>
+        ${p.phone && p.phone !== '—' ? `<div style="font-size:0.78rem;margin-bottom:8px;">📞 ${escHtml(p.phone)}</div>` : ''}
+        <button onclick="navigateTo(${p.lat},${p.lng})" style="background:#00e676;color:#000;border:none;border-radius:8px;padding:6px 12px;font-size:0.78rem;font-weight:700;cursor:pointer;width:100%;">🗺️ توجيه</button>
+      </div>
+    `);
+    if (i === 0) setTimeout(() => marker.openPopup(), 500);
+  });
+
+  setTimeout(() => _map.invalidateSize(), 300);
+}
+
+// ── Tabs ──
+function switchTab(tab, btn) {
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('homeTab').style.display    = tab === 'home'    ? '' : 'none';
+  document.getElementById('mapTab').style.display     = tab === 'map'     ? 'flex' : 'none';
+  document.getElementById('favTab').style.display     = tab === 'fav'     ? 'flex' : 'none';
+  document.getElementById('profileTab').style.display = tab === 'profile' ? 'flex' : 'none';
+  if (tab === 'map') setTimeout(() => initMap(), 100);
+}
+
+// ── Search ──
+function startSearch() {
+  if (!navigator.geolocation) {
+    document.getElementById('locationDeniedModal').style.display = 'flex';
+    return;
+  }
+  showScreen('radarScreen');
+  startRadarAnimation();
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      state.userLat = pos.coords.latitude;
+      state.userLng = pos.coords.longitude;
+      updateRadarStep(2, 35);
+      searchPharmacies(state.userLat, state.userLng);
+    },
+    () => {
+      showScreen('mainScreen');
+      document.getElementById('locationDeniedModal').style.display = 'flex';
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+function retryLocation() {
+  document.getElementById('locationDeniedModal').style.display = 'none';
+  setTimeout(() => {
+    showScreen('radarScreen');
+    startRadarAnimation();
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        state.userLat = pos.coords.latitude;
+        state.userLng = pos.coords.longitude;
+        updateRadarStep(2, 35);
+        searchPharmacies(state.userLat, state.userLng);
+      },
+      () => {
+        showScreen('mainScreen');
+        document.getElementById('locationDeniedModal').style.display = 'flex';
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  }, 300);
+}
+
+function closeLocationModal() {
+  document.getElementById('locationDeniedModal').style.display = 'none';
+}
+
+// ── Radar ──
+function startRadarAnimation() {
+  setRadarText(radarTexts[state.lang][0]);
+  setRadarProgress(10);
+  activateStep('step1');
+}
+function updateRadarStep(step, pct) {
+  setRadarText(radarTexts[state.lang][Math.min(step - 1, 4)]);
+  setRadarProgress(pct);
+  if (step === 1) activateStep('step1');
+  else if (step === 2) activateStep('step2');
+  else activateStep('step3');
+}
+function setRadarText(t) { const e = document.getElementById('radarStatusText'); if(e) e.textContent = t; }
+function setRadarProgress(p) { const e = document.getElementById('radarProgressBar'); if(e) e.style.width = p + '%'; }
+function activateStep(id) {
+  document.querySelectorAll('.radar-step').forEach(s => s.classList.remove('active'));
+  const e = document.getElementById(id); if(e) e.classList.add('active');
+}
+
+// ── دالة حساب حالة الفتح/الإغلاق بناءً على الوقت الحالي ──
+function isPharmacyOpen(openTime, closeTime) {
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const [oh, om] = openTime.split(':').map(Number);
+  const [ch, cm] = closeTime.split(':').map(Number);
+  const openMins  = oh * 60 + om;
+  const closeMins = ch * 60 + cm;
+  if (openMins <= closeMins) {
+    // فترة عادية: مثال 08:00 → 20:00
+    return nowMins >= openMins && nowMins < closeMins;
+  } else {
+    // فترة تتجاوز منتصف الليل: مثال 21:00 → 06:00
+    return nowMins >= openMins || nowMins < closeMins;
+  }
+}
+
+// ── حساب الوقت المتبقي حتى الإغلاق ──
+function timeUntilClose(closeTime) {
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const [ch, cm] = closeTime.split(':').map(Number);
+  const closeMins = ch * 60 + cm;
+  let diff = closeMins - nowMins;
+  if (diff <= 0) diff += 24 * 60; // تجاوز منتصف الليل
+  const h = Math.floor(diff / 60);
+  const m = diff % 60;
+  if (h > 0 && m > 0) return `تغلق بعد ${h}س ${m}د`;
+  if (h > 0) return `تغلق بعد ${h}س`;
+  return `تغلق بعد ${m}د`;
+}
+
+// ── البحث في قاعدة البيانات (Firebase) ──
+async function searchPharmacies(lat, lng) {
+  updateRadarStep(2, 50);
+  try {
+    const snap = await db.collection('pharmacies').where('status', '==', 'approved').get();
+    updateRadarStep(3, 75);
+
+    if (!snap.empty) {
+      const results = [];
+      snap.forEach(doc => {
+        const d = doc.data();
+        const pLat = parseFloat(d.lat), pLng = parseFloat(d.lng);
+        if (!pLat || !pLng) return; // تجاهل الصيدليات بدون إحداثيات
+        const dist = calcDistance(lat, lng, pLat, pLng);
+        const openTime  = d.openTime  || '21:00';
+        const closeTime = d.closeTime || '06:00';
+        const isOpen = isPharmacyOpen(openTime, closeTime);
+        results.push({
+          id: doc.id,
+          name: d.name || 'صيدلية',
+          lat: pLat,
+          lng: pLng,
+          distance: dist,
+          distanceText: formatDist(dist),
+          phone: d.phone || '—',
+          city: d.city || '',
+          address: d.address || '',
+          time: closeTime,
+          openTime: openTime,
+          open: isOpen,
+        });
+      });
+
+      if (results.length > 0) {
+        state.pharmacies = results.sort((a, b) => a.distance - b.distance).slice(0, CONFIG.MAX_RESULTS);
+        finishSearch();
+        return;
+      }
+    }
+    // لا توجد صيدليات في قاعدة البيانات → عرض رسالة
+    showNoPharmaciesMessage();
+  } catch(e) {
+    showNoPharmaciesMessage();
+  }
+}
+
+function showNoPharmaciesMessage() {
+  updateRadarStep(3, 100);
+  setRadarText('لم يتم العثور على صيدليات مسجّلة في قاعدة البيانات بعد.');
+  setTimeout(() => {
+    showScreen('mainScreen');
+    // Toast message
+    showToast('⚠️ لا توجد صيدليات مسجّلة بعد. ساعدنا بإضافة صيدلية من زر +');
+  }, 1200);
+}
+
+function finishSearch() {
+  updateRadarStep(3, 100);
+  setRadarText(radarTexts[state.lang][4]);
+  setTimeout(() => { buildResultsScreen(); showScreen('resultsScreen'); }, 900);
+}
+
+// ── Build Results ──
+function buildResultsScreen() {
+  if (!state.pharmacies.length) return;
+  const nearest = state.pharmacies[0];
+  state.nearestPharmacy = nearest;
+  const isEn = state.lang === 'en';
+
+  const openCount = state.pharmacies.filter(p => p.open).length;
+  const closedCount = state.pharmacies.length - openCount;
+  document.getElementById('resultsBadge').textContent = isEn
+    ? `${openCount} Open · ${closedCount} Closed`
+    : `${openCount} مفتوحة · ${closedCount} مغلقة`;
+  document.getElementById('nearestName').textContent  = nearest.name;
+  document.getElementById('nearestDist').textContent  = nearest.distanceText;
+  document.getElementById('nearestPhone').textContent = nearest.phone || '—';
+  document.getElementById('nearestTime').textContent  = `${isEn ? 'From' : 'من'} ${nearest.openTime || '21:00'} ${isEn ? 'until' : 'حتى'} ${nearest.time || '06:00'}`;
+  const statusEl = document.querySelector('.nearest-status');
+  if (nearest.open) {
+    statusEl.textContent = `• مفتوحة الآن — ${timeUntilClose(nearest.time || '06:00')}`;
+    statusEl.style.color = 'var(--green-main)';
+  } else {
+    statusEl.textContent = `• تفتح الساعة ${nearest.openTime || '21:00'}`;
+    statusEl.style.color = '#ff5252';
+  }
+  document.querySelector('.results-title').textContent  = isEn ? 'Search Results' : 'نتائج البحث';
+  document.querySelector('.other-title').textContent    = isEn ? 'Other Nearby Pharmacies' : 'صيدليات أخرى قريبة';
+
+  const list = document.getElementById('otherList');
+  list.innerHTML = '';
+  state.pharmacies.slice(1).forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = 'pharmacy-card';
+    card.style.animationDelay = (idx * 0.08) + 's';
+    card.onclick = () => openDetailModal(p);
+    card.innerHTML = `
+      <div class="pharmacy-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="10" r="6"/><path d="M10 10h4M12 8v4"/><path d="M12 16v6"/><path d="M8 22q4-4 8 0"/>
+        </svg>
+      </div>
+      <div class="pharmacy-card-info">
+        <div class="pharmacy-card-name">${escHtml(p.name)}</div>
+        <div class="pharmacy-card-meta">
+          ${p.open
+            ? `<span class="pharmacy-status-open">${isEn?'• Open':'• مفتوحة'}</span>`
+            : `<span style="font-size:0.72rem;font-weight:700;color:#ff5252;">${isEn?'• Closed':'• تفتح الساعة ' + (p.openTime||'21:00')}</span>`
+          }
+          <span class="pharmacy-dist">📍 ${p.distanceText}</span>
+        </div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:3px;">🕐 من ${p.openTime||'21:00'} حتى ${p.time||'06:00'}</div>
+      </div>
+      <div class="pharmacy-card-actions">
+        <button class="pharmacy-heart-btn" onclick="event.stopPropagation(); toggleCardFav(this, '${escHtml(p.id)}')" title="مفضلة">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ff5252" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
+        <button class="pharmacy-card-nav-btn" onclick="event.stopPropagation(); navigateTo(${p.lat},${p.lng})" title="${isEn?'Navigate':'التوجه'}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+          </svg>
+        </button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+// ── Favorites ──
+function toggleNearestFav() {
+  state.nearestFav = !state.nearestFav;
+  const btn = document.getElementById('nearestHeartBtn');
+  const svg = btn.querySelector('svg');
+  svg.style.fill = state.nearestFav ? '#ff5252' : 'none';
+  btn.style.transform = 'scale(1.3)';
+  setTimeout(() => { btn.style.transform = 'scale(1)'; btn.style.transition = 'transform 0.3s ease'; }, 300);
+  if (state.nearestPharmacy) {
+    if (state.nearestFav) addToFavorites(state.nearestPharmacy);
+    else removeFromFavorites(state.nearestPharmacy.id);
+  }
+}
+
+function toggleCardFav(btn, id) {
+  const svg = btn.querySelector('svg');
+  const isFaved = svg.style.fill === 'rgb(255, 82, 82)';
+  svg.style.fill = isFaved ? 'none' : '#ff5252';
+  btn.style.transform = 'scale(1.3)';
+  setTimeout(() => { btn.style.transform = 'scale(1)'; }, 300);
+  const pharmacy = state.pharmacies.find(p => p.id === id);
+  if (pharmacy) {
+    if (!isFaved) addToFavorites(pharmacy);
+    else removeFromFavorites(id);
+  }
+}
+
+function addToFavorites(pharmacy) {
+  if (state.favorites.find(f => f.id === pharmacy.id)) return;
+  state.favorites.push(pharmacy);
+  renderFavList();
+}
+
+function removeFromFavorites(id) {
+  state.favorites = state.favorites.filter(f => f.id !== id);
+  renderFavList();
+}
+
+function renderFavList() {
+  const emptyEl = document.getElementById('favEmpty');
+  const listEl  = document.getElementById('favList');
+  if (!emptyEl || !listEl) return;
+  if (state.favorites.length === 0) {
+    emptyEl.style.display = 'flex';
+    listEl.style.display  = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  listEl.style.display  = 'flex';
+  const isEn = state.lang === 'en';
+  listEl.innerHTML = state.favorites.map(p => `
+    <div style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;animation:cardFadeIn 0.4s ease;">
+      <div style="width:44px;height:44px;border-radius:12px;background:#00e67610;border:1px solid #00e67625;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="22" height="22">
+          <circle cx="12" cy="10" r="6"/><path d="M10 10h4M12 8v4"/><path d="M12 16v6"/><path d="M8 22q4-4 8 0"/>
+        </svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.95rem;font-weight:700;color:var(--text-primary);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(p.name)}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:0.7rem;font-weight:700;color:var(--green-main);">• ${isEn?'Open':'مفتوحة'}</span>
+          <span style="font-size:0.72rem;color:var(--text-muted);">📍 ${p.distanceText}</span>
+          ${p.phone ? `<span style="font-size:0.72rem;color:var(--green-main);cursor:pointer;" onclick="callPhone('${escHtml(p.phone)}')">📞 ${escHtml(p.phone)}</span>` : ''}
+        </div>
+      </div>
+      <button onclick="removeFromFavorites('${escHtml(p.id)}')" title="${isEn?'Remove':'إزالة'}" style="width:32px;height:32px;border-radius:50%;background:#ff525215;border:1px solid #ff525230;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;">
+        <svg viewBox="0 0 24 24" fill="#ff5252" stroke="none" width="16" height="16">
+          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+        </svg>
+      </button>
+    </div>
+  `).join('');
+}
+
+// ── Detail Modal ──
+function openDetailModal(pharmacy) {
+  state.currentDetailPharmacy = pharmacy;
+  const isEn = state.lang === 'en';
+  document.getElementById('detailName').textContent = pharmacy.name;
+  document.getElementById('detailPhone').textContent = pharmacy.phone || '—';
+  // ETA calculation: ~12 min/km walking
+  const km = pharmacy.distance / 1000;
+  const eta = Math.round(km * 12);
+  document.getElementById('detailDistTime').textContent = `${pharmacy.distanceText} — ~${eta} ${isEn ? 'min' : 'دقيقة'}`;
+  document.getElementById('pharmacyDetailModal').classList.add('open');
+}
+
+function closeDetailModal() {
+  document.getElementById('pharmacyDetailModal').classList.remove('open');
+  state.currentDetailPharmacy = null;
+}
+
+function openInMaps() {
+  const p = state.currentDetailPharmacy || state.nearestPharmacy;
+  if (!p) return;
+  // Add ~200m offset for the "fake nearby" coordinates
+  const offsetLat = (p.lat + 0.0009).toFixed(6);
+  const offsetLng = (p.lng + 0.0012).toFixed(6);
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${offsetLat},${offsetLng}&travelmode=walking`, '_blank');
+}
+
+// ── Navigation ──
+function navigateToNearest() {
+  if (!state.nearestPharmacy) return;
+  openDetailModal(state.nearestPharmacy);
+}
+function navigateTo(lat, lng) {
+  if (!lat||!lng) return;
+  const offsetLat = (lat + 0.0009).toFixed(6);
+  const offsetLng = (lng + 0.0012).toFixed(6);
+  window.open(`https://www.google.com/maps/dir/?api=1&destination=${offsetLat},${offsetLng}&travelmode=walking`, '_blank');
+}
+function goBack() { showScreen('mainScreen'); }
+
+// ── Add Pharmacy ──
+function openAddPharmacyModal() {
+  const el = document.getElementById('addPharmacyOverlay');
+  el.style.display = 'flex';
+  // default to text mode
+  switchAddMode('text');
+}
+function closeAddPharmacyModal() {
+  document.getElementById('addPharmacyOverlay').style.display = 'none';
+  document.getElementById('addStatus').style.display = 'none';
+  ['addName','addPhone','addLat','addLng','addAddress'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const cityEl = document.getElementById('addCity');
+  if (cityEl) cityEl.selectedIndex = 0;
+  const closeTimeEl = document.getElementById('addCloseTime');
+  if (closeTimeEl) closeTimeEl.value = '07:00';
+  const openTimeEl = document.getElementById('addOpenTime');
+  if (openTimeEl) openTimeEl.value = '21:00';
+  // reset map picker
+  if (fullPickerMap) { fullPickerMap.remove(); fullPickerMap = null; fullPickerMarker = null; }
+  fullPickerPending = { lat: null, lng: null };
+  const pickerStatus = document.getElementById('addPickerStatus');
+  if (pickerStatus) { pickerStatus.textContent = '👆 اضغط على الخريطة لتحديد موقع الصيدلية'; pickerStatus.style.color = 'var(--text-muted)'; }
+  const pickerCoords = document.getElementById('addPickerCoords');
+  if (pickerCoords) pickerCoords.style.display = 'none';
+}
+
+
+// ── وضعا إضافة الموقع: نص / خريطة ──
+let fullPickerMap = null, fullPickerMarker = null, fullPickerPending = { lat: null, lng: null };
+
+function switchAddMode(mode) {
+  const textBtn  = document.getElementById('addModeTextBtn');
+  const mapBtn   = document.getElementById('addModeMapBtn');
+  const textArea = document.getElementById('addModeTextArea');
+  const mapArea  = document.getElementById('addModeMapArea');
+  const activeStyle   = 'background:#00e67618;border:2px solid #00e676;color:var(--green-main);';
+  const inactiveStyle = 'background:var(--bg-card);border:2px solid var(--border-subtle);color:var(--text-secondary);';
+  if (mode === 'text') {
+    textBtn.style.cssText += activeStyle;
+    mapBtn.style.cssText  += inactiveStyle;
+    textArea.style.display = 'block';
+    mapArea.style.display  = 'none';
+  } else {
+    mapBtn.style.cssText   += activeStyle;
+    textBtn.style.cssText  += inactiveStyle;
+    textArea.style.display = 'none';
+    mapArea.style.display  = 'flex';
+  }
+}
+
+function openFullMap() {
+  const overlay = document.getElementById('fullMapOverlay');
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => initFullPickerMap(), 80);
+}
+
+function closeFullMap() {
+  document.getElementById('fullMapOverlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function confirmFullMap() {
+  if (!fullPickerPending.lat) return;
+  document.getElementById('addLat').value = fullPickerPending.lat;
+  document.getElementById('addLng').value = fullPickerPending.lng;
+  const statusEl = document.getElementById('addPickerStatus');
+  const coordsEl = document.getElementById('addPickerCoords');
+  statusEl.textContent = '✅ تم تحديد الموقع بنجاح';
+  statusEl.style.color = 'var(--green-main)';
+  coordsEl.style.display = 'block';
+  coordsEl.textContent = `${parseFloat(fullPickerPending.lat).toFixed(5)}, ${parseFloat(fullPickerPending.lng).toFixed(5)}`;
+  closeFullMap();
+}
+
+async function searchOnFullMap() {
+  const q  = document.getElementById('fullMapSearchInput').value.trim();
+  const st = document.getElementById('fullMapSearchStatus');
+  if (!q) return;
+  st.style.display = 'block';
+  st.style.color = '#ffffff80';
+  st.textContent = '⏳ جاري البحث...';
+  try {
+    const res  = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q + ' الجزائر')}&format=json&limit=1`);
+    const data = await res.json();
+    if (!data.length) throw new Error('لم يُعثر على النتيجة، جرّب وصفاً أدق');
+    const { lat, lon, display_name } = data[0];
+    fullPickerMap.setView([+lat, +lon], 17);
+    st.style.color = '#00e676';
+    const short = display_name.split(',').slice(0,2).join(', ');
+    st.textContent = `✅ ${short}`;
+    setTimeout(() => { st.style.display = 'none'; }, 3000);
+  } catch(e) {
+    st.style.color = '#ff5252';
+    st.textContent = '❌ ' + e.message;
+  }
+}
+
+function initFullPickerMap() {
+  const el = document.getElementById('fullPickerMap');
+  if (!el) return;
+  if (fullPickerMap) { fullPickerMap.invalidateSize(); return; }
+
+  const center = state.userLat ? [state.userLat, state.userLng] : [28.0339, 1.6596];
+  const zoom   = state.userLat ? 16 : 5;
+
+  fullPickerMap = L.map(el, { zoomControl: false, attributionControl: false }).setView(center, zoom);
+
+  // طبقة القمر الصناعي Esri — مجانية وجودة ممتازة
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19
+  }).addTo(fullPickerMap);
+
+  // طبقة أسماء الشوارع فوق الصور
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19, opacity: 0.7
+  }).addTo(fullPickerMap);
+
+  // أزرار zoom في الأسفل اليسار
+  L.control.zoom({ position: 'bottomleft' }).addTo(fullPickerMap);
+
+  // دائرة موقع المستخدم
+  if (state.userLat) {
+    L.circle([state.userLat, state.userLng], {
+      radius: 80, color: '#00e676', fillColor: '#00e676', fillOpacity: 0.15, weight: 2
+    }).addTo(fullPickerMap);
+    L.marker([state.userLat, state.userLng], {
+      icon: L.divIcon({ className:'', html:`<div style="width:14px;height:14px;background:#00e676;border:3px solid #fff;border-radius:50%;box-shadow:0 0 10px #00e676;"></div>`, iconSize:[14,14], iconAnchor:[7,7] })
+    }).addTo(fullPickerMap);
+  }
+
+  fullPickerMap.on('click', function(e) {
+    const { lat, lng } = e.latlng;
+    fullPickerPending = { lat: lat.toFixed(6), lng: lng.toFixed(6) };
+
+    if (fullPickerMarker) fullPickerMap.removeLayer(fullPickerMarker);
+    fullPickerMarker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="width:38px;height:38px;background:#00e676;border:3px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 20px #00e67680;"></div>`,
+        iconSize: [38, 38], iconAnchor: [19, 38]
+      })
+    }).addTo(fullPickerMap);
+
+    // إخفاء التعليمة وإظهار شريط التأكيد
+    document.getElementById('fullMapHint').style.display = 'none';
+    document.getElementById('fullMapBar').style.display = 'block';
+    document.getElementById('fullMapCoordsText').textContent = `📍 ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  });
+}
+
+async function submitPharmacy() {
+  const name      = document.getElementById('addName').value.trim();
+  const phone     = document.getElementById('addPhone').value.trim();
+  const cityEl    = document.getElementById('addCity');
+  const city      = cityEl.options[cityEl.selectedIndex]?.value || '';
+  const type      = document.getElementById('addType').value;
+  const openTime  = document.getElementById('addOpenTime').value || '21:00';
+  const closeTime = document.getElementById('addCloseTime').value || '07:00';
+  const latVal    = document.getElementById('addLat').value.trim();
+  const lngVal    = document.getElementById('addLng').value.trim();
+  const address   = document.getElementById('addAddress')?.value.trim() || '';
+  const status    = document.getElementById('addStatus');
+
+  if (!name || !phone || !city) {
+    status.style.display = 'block';
+    status.style.color = 'var(--danger)';
+    status.textContent = '⚠️ يرجى ملء: الاسم، رقم الهاتف، واختيار الولاية';
+    return;
+  }
+
+  const lat = latVal ? parseFloat(latVal) : null;
+  const lng = lngVal ? parseFloat(lngVal) : null;
+
+  try {
+    await db.collection('pending_pharmacies').add({
+      name, phone, city, type, openTime, closeTime,
+      lat: lat || null,
+      lng: lng || null,
+      address: address || city,
+      submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      submittedBy: state.userName || 'مجهول',
+      status: 'pending'
+    });
+    status.style.display = 'block';
+    status.style.color = 'var(--green-main)';
+    status.textContent = '✅ تم الإرسال! سيراجعها المطور قريباً';
+    setTimeout(() => closeAddPharmacyModal(), 2200);
+  } catch(e) {
+    status.style.display = 'block';
+    status.style.color = 'var(--danger)';
+    status.textContent = '❌ ' + e.message;
+  }
+}
+
+// ── Admin Panel ──
+const ADMIN_PASS = 'mounawib2025';
+
+function openAdminPanel() {
+  document.getElementById('adminOverlay').style.display = 'flex';
+}
+function closeAdminPanel() {
+  document.getElementById('adminOverlay').style.display = 'none';
+  document.getElementById('adminContent').style.display = 'none';
+  document.getElementById('adminLoginSection').style.display = 'block';
+  document.getElementById('adminPassword').value = '';
+}
+
+async function adminLogin() {
+  const pass = document.getElementById('adminPassword').value;
+  if (pass !== ADMIN_PASS) {
+    alert('كلمة السر خاطئة');
+    return;
+  }
+  try {
+    await firebase.auth().signInAnonymously();
+  } catch(e) { /* تجاهل إذا كان مسجلاً مسبقاً */ }
+  document.getElementById('adminLoginSection').style.display = 'none';
+  document.getElementById('adminContent').style.display = 'flex';
+  loadPendingPharmacies();
+}
+
+async function loadPendingPharmacies() {
+  const list = document.getElementById('pendingList');
+  list.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:8px;">⏳ جاري التحميل...</div>';
+  try {
+    const snap = await db.collection('pending_pharmacies').where('status','==','pending').get();
+    if (snap.empty) {
+      list.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:8px;">لا توجد طلبات حالياً ✅</div>';
+      return;
+    }
+    list.innerHTML = '';
+    snap.forEach(doc => {
+      const d = doc.data();
+      const hasCoords = d.lat && d.lng;
+      const card = document.createElement('div');
+      card.id = `pending_${doc.id}`;
+      card.style.cssText = 'background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;';
+      card.innerHTML = `
+        <!-- معلومات الطلب -->
+        <div style="font-size:1rem;font-weight:800;color:var(--text-primary);">💊 ${escHtml(d.name)}</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="font-size:0.8rem;color:var(--text-secondary);">📍 ${escHtml(d.city)} ${d.address && d.address !== d.city ? '— ' + escHtml(d.address) : ''}</div>
+          ${d.phone ? `<div style="font-size:0.8rem;color:var(--text-secondary);">📞 <a href="tel:${escHtml(d.phone)}" style="color:var(--green-main);">${escHtml(d.phone)}</a></div>` : ''}
+          <div style="font-size:0.75rem;color:var(--text-muted);">⏰ ${escHtml(d.closeTime||'—')} | ${d.type === 'pharmacist' ? '🏥 صيدلاني' : '👤 مستخدم'} — ${escHtml(d.submittedBy||'مجهول')}</div>
+        </div>
+
+        <!-- تبويبات الأدمن لإضافة الموقع -->
+        <div style="background:var(--bg-card);border:1px solid #00e67622;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:0.75rem;font-weight:800;color:var(--green-main);">📌 تحديد الموقع</div>
+
+          <!-- 3 أزرار وضع -->
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+            <button onclick="adminSwitchMode('${doc.id}','map')" id="admBtn_map_${doc.id}"
+              style="background:#00e67618;border:2px solid #00e676;border-radius:10px;padding:8px 4px;color:var(--green-main);font-size:0.72rem;font-weight:800;cursor:pointer;">🗺️ خريطة</button>
+            <button onclick="adminSwitchMode('${doc.id}','text')" id="admBtn_text_${doc.id}"
+              style="background:var(--bg-elevated);border:2px solid var(--border-subtle);border-radius:10px;padding:8px 4px;color:var(--text-secondary);font-size:0.72rem;font-weight:800;cursor:pointer;">✍️ نص</button>
+            <button onclick="adminSwitchMode('${doc.id}','coords')" id="admBtn_coords_${doc.id}"
+              style="background:var(--bg-elevated);border:2px solid var(--border-subtle);border-radius:10px;padding:8px 4px;color:var(--text-secondary);font-size:0.72rem;font-weight:800;cursor:pointer;">🔢 إحداثيات</button>
+          </div>
+
+          <!-- الخريطة -->
+          <div id="admMode_map_${doc.id}" style="display:flex;flex-direction:column;gap:8px;">
+            <div id="admMap_${doc.id}" style="width:100%;height:180px;border-radius:10px;border:1px solid var(--border-subtle);overflow:hidden;background:#0d1117;"></div>
+            <div id="admMapStatus_${doc.id}" style="font-size:0.72rem;color:var(--text-muted);text-align:center;">👆 اضغط على الخريطة لتحديد الموقع</div>
+          </div>
+
+          <!-- الرابط النصي -->
+          <div id="admMode_text_${doc.id}" style="display:none;flex-direction:column;gap:6px;">
+            <input id="admAddress_${doc.id}" value="${escHtml(d.address||d.city||'')}" placeholder="الاسم الكامل + الحي + المدينة (لـ Geocoding)"
+              style="background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:8px;padding:9px 12px;color:var(--text-primary);font-family:inherit;font-size:0.82rem;width:100%;outline:none;" />
+            <button onclick="adminGeocode('${doc.id}')"
+              style="background:var(--green-main);border:none;border-radius:8px;padding:9px;color:#000;font-weight:800;font-size:0.8rem;cursor:pointer;font-family:inherit;">🔍 بحث تلقائي عن الموقع</button>
+            <div id="admGeoStatus_${doc.id}" style="display:none;font-size:0.72rem;font-weight:700;padding:6px 10px;border-radius:8px;"></div>
+          </div>
+
+          <!-- الإحداثيات اليدوية -->
+          <div id="admMode_coords_${doc.id}" style="display:none;flex-direction:column;gap:6px;">
+            <div style="display:flex;gap:6px;">
+              <input id="admLat_${doc.id}" value="${d.lat||''}" placeholder="Lat (خط العرض)" dir="ltr" type="number" step="any"
+                style="background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:8px;padding:9px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;width:50%;outline:none;" />
+              <input id="admLng_${doc.id}" value="${d.lng||''}" placeholder="Lng (خط الطول)" dir="ltr" type="number" step="any"
+                style="background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:8px;padding:9px;color:var(--text-primary);font-family:inherit;font-size:0.8rem;width:50%;outline:none;" />
+            </div>
+            <div style="font-size:0.68rem;color:var(--text-muted);">مثال: 36.73225, 3.08746</div>
+          </div>
+
+          <!-- إظهار الإحداثيات المحددة -->
+          <div id="admCoordsDisplay_${doc.id}" style="display:${hasCoords?'block':'none'};background:#00e67612;border:1px solid #00e67630;border-radius:8px;padding:7px 10px;font-size:0.75rem;font-weight:700;color:var(--green-main);text-align:center;direction:ltr;">
+            ${hasCoords ? `${d.lat}, ${d.lng}` : ''}
+          </div>
+        </div>
+
+        <!-- توقيت المناوبة -->
+        <div style="background:var(--bg-card);border:1px solid #00e67622;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+          <div style="font-size:0.75rem;font-weight:800;color:var(--green-main);">⏰ توقيت المناوبة</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <label style="font-size:0.68rem;color:var(--text-muted);">وقت البدء</label>
+              <input id="admOpenTime_${doc.id}" type="time" value="${d.openTime||'21:00'}"
+                style="background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px;color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;outline:none;" />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <label style="font-size:0.68rem;color:var(--text-muted);">وقت الانتهاء</label>
+              <input id="admCloseTime_${doc.id}" type="time" value="${d.closeTime||'06:00'}"
+                style="background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px;color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;outline:none;" />
+            </div>
+          </div>
+        </div>
+
+        <!-- أزرار القبول/الرفض -->
+        <div style="display:flex;gap:8px;margin-top:2px;">
+          <button onclick="approvePharmacy('${doc.id}')" style="flex:1;background:var(--green-main);border:none;border-radius:10px;padding:10px;color:#000;font-weight:800;font-size:0.85rem;cursor:pointer;font-family:inherit;">✅ قبول</button>
+          <button onclick="rejectPharmacy('${doc.id}')" style="flex:1;background:#ff525218;border:1.5px solid #ff525440;border-radius:10px;padding:10px;color:#ff5252;font-weight:800;font-size:0.85rem;cursor:pointer;font-family:inherit;">❌ رفض</button>
+        </div>
+      `;
+      list.appendChild(card);
+      // تهيئة الخريطة فوراً
+      setTimeout(() => adminInitMap(doc.id, d.lat, d.lng), 80);
+    });
+  } catch(e) {
+    list.innerHTML = '<div style="color:var(--danger);font-size:0.8rem;padding:8px;">خطأ في التحميل: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+// خرائط الأدمن
+const adminMaps = {};
+function adminInitMap(id, existLat, existLng) {
+  const el = document.getElementById(`admMap_${id}`);
+  if (!el || adminMaps[id]) return;
+  const center = (existLat && existLng) ? [existLat, existLng] : [28.0339, 1.6596];
+  const zoom   = (existLat && existLng) ? 15 : 5;
+  const map = L.map(el, { zoomControl: true, attributionControl: false }).setView(center, zoom);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+  adminMaps[id] = { map, marker: null };
+
+  if (existLat && existLng) {
+    adminMaps[id].marker = L.marker([existLat, existLng]).addTo(map);
+  }
+
+  map.on('click', function(e) {
+    const { lat, lng } = e.latlng;
+    document.getElementById(`admLat_${id}`).value = lat.toFixed(6);
+    document.getElementById(`admLng_${id}`).value = lng.toFixed(6);
+    if (adminMaps[id].marker) map.removeLayer(adminMaps[id].marker);
+    adminMaps[id].marker = L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="width:32px;height:32px;background:#00e676;border:3px solid #fff;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 4px 14px #00e67660;"></div>`,
+        iconSize: [32, 32], iconAnchor: [16, 32]
+      })
+    }).addTo(map);
+    document.getElementById(`admMapStatus_${id}`).textContent = `✅ ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    document.getElementById(`admMapStatus_${id}`).style.color = 'var(--green-main)';
+    const disp = document.getElementById(`admCoordsDisplay_${id}`);
+    disp.style.display = 'block';
+    disp.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+  });
+}
+
+function adminSwitchMode(id, mode) {
+  ['map','text','coords'].forEach(m => {
+    const btn  = document.getElementById(`admBtn_${m}_${id}`);
+    const area = document.getElementById(`admMode_${m}_${id}`);
+    const isActive = m === mode;
+    if (btn)  btn.style.cssText  = isActive
+      ? 'background:#00e67618;border:2px solid #00e676;border-radius:10px;padding:8px 4px;color:var(--green-main);font-size:0.72rem;font-weight:800;cursor:pointer;'
+      : 'background:var(--bg-elevated);border:2px solid var(--border-subtle);border-radius:10px;padding:8px 4px;color:var(--text-secondary);font-size:0.72rem;font-weight:800;cursor:pointer;';
+    if (area) area.style.display = isActive ? (m === 'map' ? 'flex' : 'flex') : 'none';
+  });
+  if (mode === 'map') setTimeout(() => { if (adminMaps[id]) adminMaps[id].map.invalidateSize(); }, 100);
+}
+
+async function adminGeocode(id) {
+  const query   = document.getElementById(`admAddress_${id}`).value.trim();
+  const statusEl = document.getElementById(`admGeoStatus_${id}`);
+  if (!query) return;
+  statusEl.style.display = 'block';
+  statusEl.style.background = '#1a2535';
+  statusEl.style.color = 'var(--text-muted)';
+  statusEl.textContent = '⏳ جاري البحث...';
+  try {
+    const res  = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=dz`);
+    const data = await res.json();
+    if (!data.length) throw new Error('لم يُعثر على الموقع');
+    const { lat, lon } = data[0];
+    document.getElementById(`admLat_${id}`).value = parseFloat(lat).toFixed(6);
+    document.getElementById(`admLng_${id}`).value = parseFloat(lon).toFixed(6);
+    statusEl.style.background = '#00e67612';
+    statusEl.style.color = 'var(--green-main)';
+    statusEl.textContent = `✅ تم: ${parseFloat(lat).toFixed(5)}, ${parseFloat(lon).toFixed(5)}`;
+    const disp = document.getElementById(`admCoordsDisplay_${id}`);
+    disp.style.display = 'block';
+    disp.textContent   = `${parseFloat(lat).toFixed(6)}, ${parseFloat(lon).toFixed(6)}`;
+    // حرك الخريطة
+    if (adminMaps[id]) {
+      adminMaps[id].map.setView([lat, lon], 15);
+      if (adminMaps[id].marker) adminMaps[id].map.removeLayer(adminMaps[id].marker);
+      adminMaps[id].marker = L.marker([lat, lon]).addTo(adminMaps[id].map);
+    }
+  } catch(e) {
+    statusEl.style.background = '#ff525215';
+    statusEl.style.color = '#ff5252';
+    statusEl.textContent = '❌ ' + e.message + ' — جرّب وصف أدق';
+  }
+}
+
+async function approvePharmacy(id) {
+  try {
+    const latVal = parseFloat(document.getElementById(`admLat_${id}`)?.value);
+    const lngVal = parseFloat(document.getElementById(`admLng_${id}`)?.value);
+
+    if (!latVal || !lngVal || isNaN(latVal) || isNaN(lngVal)) {
+      showToast('⚠️ حدد الموقع على الخريطة أو أدخل الإحداثيات أولاً!');
+      return;
+    }
+
+    const docRef  = db.collection('pending_pharmacies').doc(id);
+    const docSnap = await docRef.get();
+    const d       = docSnap.data();
+
+    const openTimeVal  = document.getElementById(`admOpenTime_${id}`)?.value  || d.openTime  || '21:00';
+    const closeTimeVal = document.getElementById(`admCloseTime_${id}`)?.value || d.closeTime || '06:00';
+
+    await db.collection('pharmacies').add({
+      ...d,
+      lat: latVal,
+      lng: lngVal,
+      openTime:  openTimeVal,
+      closeTime: closeTimeVal,
+      status: 'approved',
+      approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await docRef.update({ status: 'approved' });
+
+    const card = document.getElementById(`pending_${id}`);
+    if (card) card.remove();
+    showToast('✅ تمت الموافقة على الصيدلية!');
+
+    const list = document.getElementById('pendingList');
+    if (list && list.children.length === 0) {
+      list.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:8px;">لا توجد طلبات حالياً ✅</div>';
+    }
+  } catch(e) { showToast('❌ خطأ: ' + e.message); }
+}
+
+async function rejectPharmacy(id) {
+  try {
+    await db.collection('pending_pharmacies').doc(id).update({ status: 'rejected' });
+    const card = document.getElementById('pending_' + id);
+    if (card) card.remove();
+    showToast('❌ تم رفض الطلب');
+    const list = document.getElementById('pendingList');
+    if (list && list.children.length === 0) {
+      list.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">لا توجد طلبات حالياً ✅</div>';
+    }
+  } catch(e) { alert('خطأ في الرفض: ' + e.message); }
+}
+
+// ── Admin Tabs ──
+function adminTab(tab) {
+  const isPending = tab === 'pending';
+  document.getElementById('tabPending').style.display  = isPending ? 'flex' : 'none';
+  document.getElementById('tabApproved').style.display = isPending ? 'none' : 'flex';
+  document.getElementById('tabBtnPending').style.cssText  = isPending
+    ? 'background:#00e67618;border:2px solid #00e676;border-radius:10px;padding:9px;color:var(--green-main);font-family:inherit;font-size:0.78rem;font-weight:800;cursor:pointer;'
+    : 'background:var(--bg-elevated);border:2px solid var(--border-subtle);border-radius:10px;padding:9px;color:var(--text-secondary);font-family:inherit;font-size:0.78rem;font-weight:800;cursor:pointer;';
+  document.getElementById('tabBtnApproved').style.cssText = isPending
+    ? 'background:var(--bg-elevated);border:2px solid var(--border-subtle);border-radius:10px;padding:9px;color:var(--text-secondary);font-family:inherit;font-size:0.78rem;font-weight:800;cursor:pointer;'
+    : 'background:#00e67618;border:2px solid #00e676;border-radius:10px;padding:9px;color:var(--green-main);font-family:inherit;font-size:0.78rem;font-weight:800;cursor:pointer;';
+}
+
+async function loadApprovedForEdit() {
+  const listEl = document.getElementById('approvedEditList');
+  listEl.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:8px;">⏳ جاري التحميل...</div>';
+  try {
+    const snap = await db.collection('pharmacies').where('status','==','approved').orderBy('name').get();
+    if (snap.empty) {
+      listEl.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:8px;">لا توجد صيدليات معتمدة</div>';
+      return;
+    }
+    listEl.innerHTML = '';
+    snap.forEach(doc => {
+      const d = doc.data();
+      const card = document.createElement('div');
+      card.style.cssText = 'background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px;';
+      card.innerHTML = `
+        <div style="font-size:0.9rem;font-weight:800;color:var(--text-primary);">💊 ${escHtml(d.name||'—')}</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">📍 ${escHtml(d.city||'—')}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:0.68rem;color:var(--text-muted);">وقت البدء</label>
+            <input id="editOpen_${doc.id}" type="time" value="${d.openTime||'21:00'}"
+              style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px;color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;outline:none;" />
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <label style="font-size:0.68rem;color:var(--text-muted);">وقت الانتهاء</label>
+            <input id="editClose_${doc.id}" type="time" value="${d.closeTime||'06:00'}"
+              style="background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px;color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;outline:none;" />
+          </div>
+        </div>
+        <button onclick="savePharmacyTime('${doc.id}')"
+          style="background:var(--green-main);border:none;border-radius:8px;padding:9px;color:#000;font-family:inherit;font-size:0.82rem;font-weight:900;cursor:pointer;width:100%;">
+          💾 حفظ التوقيت
+        </button>
+      `;
+      listEl.appendChild(card);
+    });
+  } catch(e) {
+    listEl.innerHTML = `<div style="color:var(--danger);font-size:0.8rem;padding:8px;">❌ خطأ: ${escHtml(e.message)}</div>`;
+  }
+}
+
+async function savePharmacyTime(id) {
+  const openTime  = document.getElementById(`editOpen_${id}`)?.value;
+  const closeTime = document.getElementById(`editClose_${id}`)?.value;
+  if (!openTime || !closeTime) { showToast('⚠️ أدخل التوقيت'); return; }
+  try {
+    await db.collection('pharmacies').doc(id).update({ openTime, closeTime });
+    showToast('✅ تم حفظ التوقيت!');
+  } catch(e) { showToast('❌ خطأ: ' + e.message); }
+}
+
+// ── Phone Call ──
+function callPhone(phone) {
+  if (!phone || phone === '—') return;
+  const clean = phone.replace(/\s+/g, '');
+  window.location.href = 'tel:' + clean;
+}
+
+// ── Click Sounds ──
+const _ac = new (window.AudioContext || window.webkitAudioContext)();
+function playClick(type = 'default') {
+  try {
+    const o = _ac.createOscillator();
+    const g = _ac.createGain();
+    o.connect(g); g.connect(_ac.destination);
+    if (type === 'nav') { o.frequency.value = 880; g.gain.setValueAtTime(0.08, _ac.currentTime); }
+    else if (type === 'success') { o.frequency.value = 1046; g.gain.setValueAtTime(0.1, _ac.currentTime); }
+    else { o.frequency.value = 660; g.gain.setValueAtTime(0.07, _ac.currentTime); }
+    g.gain.exponentialRampToValueAtTime(0.001, _ac.currentTime + 0.12);
+    o.start(); o.stop(_ac.currentTime + 0.12);
+  } catch(e) {}
+}
+document.addEventListener('click', e => {
+  const btn = e.target.closest('button, .nav-item, .pharmacy-card, .profile-login-btn, .modal-btn-primary, .modal-btn-secondary');
+  if (!btn) return;
+  if (btn.classList.contains('nav-item')) playClick('nav');
+  else if (btn.classList.contains('modal-btn-primary')) playClick('success');
+  else playClick('default');
+});
+
+// ── Toast Notification ──
+function showToast(msg, duration = 3000) {
+  let toast = document.getElementById('globalToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'globalToast';
+    toast.style.cssText = 'position:fixed;bottom:110px;left:50%;transform:translateX(-50%);background:#1a2535;border:1px solid #00e67640;color:var(--text-primary);padding:12px 20px;border-radius:99px;font-size:0.85rem;font-weight:700;font-family:var(--font-main);z-index:9999;pointer-events:none;box-shadow:0 4px 20px #00000080;transition:opacity 0.3s ease;white-space:nowrap;max-width:90vw;text-align:center;';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.opacity = '0'; }, duration);
+}
+
+// ── تحميل إحصائيات الصفحة الرئيسية ──
+async function loadHomeStats() {
+  try {
+    const snap = await db.collection('pharmacies').where('status','==','approved').get();
+    const total = snap.size;
+    const cities = new Set();
+    snap.forEach(d => { if (d.data().city) cities.add(d.data().city); });
+    const statEl = document.getElementById('statPharmacies');
+    const cityEl = document.getElementById('statCities');
+    if (statEl) statEl.textContent = total;
+    if (cityEl) cityEl.textContent = cities.size;
+  } catch(e) { /* صامت */ }
+}
+
+// ── Utils ──
+function calcDistance(la1,lo1,la2,lo2) {
+  if(la1==null||lo1==null||la2==null||lo2==null) return 9999;
+  const R=6371000, dL=toRad(la2-la1), dO=toRad(lo2-lo1);
+  const a=Math.sin(dL/2)**2+Math.cos(toRad(la1))*Math.cos(toRad(la2))*Math.sin(dO/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function toRad(d) { return d*Math.PI/180; }
+function formatDist(m) {
+  if(m<1000) return Math.round(m)+(state.lang==='ar'?' م':' m');
+  return (m/1000).toFixed(1)+(state.lang==='ar'?' كم':' km');
+}
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', () => {
+  const savedName = localStorage.getItem('mounawib_user');
+  if (savedName) {
+    state.userName = savedName;
+    const avatar = document.getElementById('greetingAvatar');
+    const greetName = document.getElementById('greetingName');
+    if (avatar) avatar.textContent = savedName.charAt(0);
+    if (greetName) greetName.textContent = savedName;
+    const guestView = document.getElementById('profileGuest');
+    const loggedView = document.getElementById('profileLoggedIn');
+    const bigAvatar = document.getElementById('profileBigAvatar');
+    const welcomeName = document.getElementById('profileWelcomeName');
+    if (guestView) guestView.style.display = 'none';
+    if (loggedView) loggedView.style.display = 'flex';
+    if (bigAvatar) bigAvatar.textContent = savedName.charAt(0);
+    if (welcomeName) welcomeName.textContent = savedName;
+  }
+  initSplash();
+  loadHomeStats();
+});
+</script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// ── Inline Manifest ──
+const manifestData = {
+  name: "مناوب - Mounawib",
+  short_name: "مناوب",
+  description: "اعثر على أقرب صيدلية مفتوحة",
+  start_url: ".",
+  display: "standalone",
+  background_color: "#080c10",
+  theme_color: "#00e676",
+  orientation: "portrait",
+  lang: "ar",
+  dir: "rtl",
+  icons: [
+    { src: "data:image/png;base64,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", sizes: "192x192", type: "image/png", purpose: "any maskable" },
+    { src: "data:image/png;base64,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", sizes: "512x512", type: "image/png", purpose: "any maskable" }
+  ]
+};
+const manifestBlob = new Blob([JSON.stringify(manifestData)], {type:'application/json'});
+const manifestURL = URL.createObjectURL(manifestBlob);
+const manifestLink = document.createElement('link');
+manifestLink.rel = 'manifest';
+manifestLink.href = manifestURL;
+document.head.appendChild(manifestLink);
+
+// ── Inline Service Worker ──
+const swCode = `
+const CACHE = 'mounawib-v1';
+self.addEventListener('install', e => { self.skipWaiting(); });
+self.addEventListener('activate', e => { self.clients.claim(); });
+self.addEventListener('fetch', e => { e.respondWith(fetch(e.request).catch(() => caches.match(e.request))); });
+`;
+if ('serviceWorker' in navigator) {
+  const swBlob = new Blob([swCode], {type:'text/javascript'});
+  const swURL = URL.createObjectURL(swBlob);
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(swURL, {scope: './'})
+      .catch(()=>{});
+  });
+}
+</script>
+
+<!-- ── Add Pharmacy Modal ── -->
+<div id="addPharmacyOverlay" style="display:none;position:fixed;inset:0;background:#00000095;backdrop-filter:blur(10px);z-index:999;align-items:flex-end;justify-content:center;padding:0;">
+  <div style="background:var(--bg-card2);border:1px solid var(--border-subtle);border-top:2px solid #00e67640;border-radius:32px 32px 0 0;padding:24px 20px 36px;width:100%;max-width:430px;display:flex;flex-direction:column;gap:16px;animation:modalSlideUp 0.4s cubic-bezier(0.34,1.56,0.64,1);max-height:94vh;overflow-y:auto;">
+
+    <!-- Handle -->
+    <div style="width:40px;height:4px;background:var(--border-subtle);border-radius:99px;margin:0 auto -4px;"></div>
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px;">
+      <div style="font-size:1.05rem;font-weight:900;color:var(--text-primary);">💊 أضف صيدلية مناوبة</div>
+      <button onclick="closeAddPharmacyModal()" style="width:32px;height:32px;border-radius:50%;background:var(--bg-elevated);border:1px solid var(--border-subtle);color:var(--text-muted);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">✕</button>
+    </div>
+    <p style="font-size:0.78rem;color:var(--text-muted);margin-top:-8px;line-height:1.6;">سيراجعها المطور قبل ظهورها للعموم ✅</p>
+
+    <!-- ═══ الحقول الأساسية ═══ -->
+    <input id="addName" placeholder="اسم الصيدلية *" style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:13px 16px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;width:100%;outline:none;transition:border-color .2s;"
+      onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor=''" />
+
+    <input id="addPhone" placeholder="رقم الهاتف *" dir="ltr" type="tel" style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:13px 16px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;width:100%;outline:none;transition:border-color .2s;"
+      onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor=''" />
+
+    <select id="addCity" style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:13px 16px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;width:100%;outline:none;">
+      <option value="">اختر الولاية *</option>
+      <option value="أدرار">01 - أدرار</option><option value="الشلف">02 - الشلف</option>
+      <option value="الأغواط">03 - الأغواط</option><option value="أم البواقي">04 - أم البواقي</option>
+      <option value="باتنة">05 - باتنة</option><option value="بجاية">06 - بجاية</option>
+      <option value="بسكرة">07 - بسكرة</option><option value="بشار">08 - بشار</option>
+      <option value="البليدة">09 - البليدة</option><option value="البويرة">10 - البويرة</option>
+      <option value="تمنراست">11 - تمنراست</option><option value="تبسة">12 - تبسة</option>
+      <option value="تلمسان">13 - تلمسان</option><option value="تيارت">14 - تيارت</option>
+      <option value="تيزي وزو">15 - تيزي وزو</option><option value="الجزائر">16 - الجزائر</option>
+      <option value="الجلفة">17 - الجلفة</option><option value="جيجل">18 - جيجل</option>
+      <option value="سطيف">19 - سطيف</option><option value="سعيدة">20 - سعيدة</option>
+      <option value="سكيكدة">21 - سكيكدة</option><option value="سيدي بلعباس">22 - سيدي بلعباس</option>
+      <option value="عنابة">23 - عنابة</option><option value="قالمة">24 - قالمة</option>
+      <option value="قسنطينة">25 - قسنطينة</option><option value="المدية">26 - المدية</option>
+      <option value="مستغانم">27 - مستغانم</option><option value="المسيلة">28 - المسيلة</option>
+      <option value="معسكر">29 - معسكر</option><option value="ورقلة">30 - ورقلة</option>
+      <option value="وهران">31 - وهران</option><option value="البيض">32 - البيض</option>
+      <option value="إليزي">33 - إليزي</option><option value="برج بوعريريج">34 - برج بوعريريج</option>
+      <option value="بومرداس">35 - بومرداس</option><option value="الطارف">36 - الطارف</option>
+      <option value="تندوف">37 - تندوف</option><option value="تيسمسيلت">38 - تيسمسيلت</option>
+      <option value="الوادي">39 - الوادي</option><option value="خنشلة">40 - خنشلة</option>
+      <option value="سوق أهراس">41 - سوق أهراس</option><option value="تيبازة">42 - تيبازة</option>
+      <option value="ميلة">43 - ميلة</option><option value="عين الدفلى">44 - عين الدفلى</option>
+      <option value="النعامة">45 - النعامة</option><option value="عين تموشنت">46 - عين تموشنت</option>
+      <option value="غرداية">47 - غرداية</option><option value="غليزان">48 - غليزان</option>
+      <option value="تيميمون">49 - تيميمون</option><option value="برج باجي مختار">50 - برج باجي مختار</option>
+      <option value="أولاد جلال">51 - أولاد جلال</option><option value="بني عباس">52 - بني عباس</option>
+      <option value="عين صالح">53 - عين صالح</option><option value="عين قزام">54 - عين قزام</option>
+      <option value="توقرت">55 - توقرت</option><option value="جانت">56 - جانت</option>
+      <option value="المغير">57 - المغير</option><option value="المنيعة">58 - المنيعة</option>
+    </select>
+
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      <label style="font-size:0.78rem;font-weight:700;color:var(--text-secondary);">⏰ وقت انتهاء المناوبة</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:0.72rem;color:var(--text-muted);">وقت البدء</label>
+          <input id="addOpenTime" type="time" value="21:00" style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:13px 16px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;width:100%;outline:none;" />
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <label style="font-size:0.72rem;color:var(--text-muted);">وقت الانتهاء</label>
+          <input id="addCloseTime" type="time" value="07:00" style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:13px 16px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;width:100%;outline:none;" />
+        </div>
+      </div>
+    </div>
+
+    <!-- نوع المستخدم -->
+    <select id="addType" style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:13px 16px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;width:100%;outline:none;">
+      <option value="user">👤 مستخدم عادي</option>
+      <option value="pharmacist">🏥 صيدلاني</option>
+    </select>
+
+    <!-- ═══ تحديد الموقع — خياران فقط ═══ -->
+    <div style="background:var(--bg-elevated);border:1px solid #00e67628;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-size:0.82rem;font-weight:800;color:var(--green-main);">📍 تحديد موقع الصيدلية</div>
+      <p style="font-size:0.73rem;color:var(--text-muted);margin-top:-6px;">اختياري — يساعد المطور على تحديد الموقع بدقة</p>
+
+      <!-- خياران -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+        <!-- الخيار 1: نص العنوان -->
+        <button onclick="switchAddMode('text')" id="addModeTextBtn"
+          style="background:#00e67618;border:2px solid #00e676;border-radius:14px;padding:14px 10px;color:var(--green-main);font-family:inherit;font-size:0.8rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s;">
+          <span style="font-size:1.4rem;">✍️</span>
+          كتابة العنوان
+        </button>
+
+        <!-- الخيار 2: الخريطة -->
+        <button onclick="switchAddMode('map')" id="addModeMapBtn"
+          style="background:var(--bg-card);border:2px solid var(--border-subtle);border-radius:14px;padding:14px 10px;color:var(--text-secondary);font-family:inherit;font-size:0.8rem;font-weight:800;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;transition:all .2s;">
+          <span style="font-size:1.4rem;">🗺️</span>
+          اختيار من الخريطة
+        </button>
+      </div>
+
+      <!-- منطقة الكتابة -->
+      <div id="addModeTextArea">
+        <textarea id="addAddress" placeholder="مثال: صيدلية النور، شارع الاستقلال، بجانب مسجد الرحمة، البيض" rows="3"
+          style="background:var(--bg-card);border:1.5px solid var(--border-subtle);border-radius:12px;padding:12px 14px;color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;outline:none;resize:none;line-height:1.6;transition:border-color .2s;"
+          onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor=''"></textarea>
+        <p style="font-size:0.7rem;color:var(--text-muted);margin-top:4px;">💡 كلما كان العنوان دقيقاً كان من الأسهل على المطور تحديد الموقع</p>
+      </div>
+
+      <!-- منطقة الخريطة — زر فتح الشاشة الكاملة -->
+      <div id="addModeMapArea" style="display:none;flex-direction:column;gap:10px;">
+        <button onclick="openFullMap()"
+          style="background:linear-gradient(135deg,#003d1a,#005724);border:2px solid #00e676;border-radius:14px;padding:16px;color:#00e676;font-family:inherit;font-size:0.9rem;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;">
+          <span style="font-size:1.5rem;">🛰️</span> فتح الخريطة كاملة
+        </button>
+        <div id="addPickerStatus" style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-align:center;">اضغط الزر لاختيار الموقع على خريطة القمر الصناعي</div>
+        <div id="addPickerCoords" style="display:none;background:#00e67612;border:1px solid #00e67630;border-radius:10px;padding:10px 14px;font-size:0.78rem;font-weight:700;color:var(--green-main);text-align:center;direction:ltr;"></div>
+      </div>
+    </div>
+
+    <!-- hidden coords fields -->
+    <input type="hidden" id="addLat" />
+    <input type="hidden" id="addLng" />
+
+    <button onclick="submitPharmacy()"
+      style="background:linear-gradient(135deg,#00c853,#00e676);border:none;border-radius:16px;padding:15px;color:#000;font-family:inherit;font-size:1rem;font-weight:900;cursor:pointer;width:100%;box-shadow:0 4px 20px #00e67640;transition:transform .2s;">
+      إرسال للمراجعة ✅
+    </button>
+    <div id="addStatus" style="font-size:0.82rem;text-align:center;color:var(--green-main);display:none;font-weight:700;"></div>
+  </div>
+</div>
+
+<!-- ── Admin Panel Modal ── -->
+<div id="adminOverlay" style="display:none;position:fixed;inset:0;background:#00000095;backdrop-filter:blur(8px);z-index:9999;flex-direction:column;align-items:center;justify-content:flex-start;padding:20px 12px;overflow-y:auto;">
+  <div style="background:var(--bg-card2);border:1px solid var(--border-subtle);border-radius:24px;padding:24px 20px;width:100%;max-width:420px;display:flex;flex-direction:column;gap:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:1.1rem;font-weight:900;color:var(--green-main);">🛡️ لوحة التحكم</div>
+      <button onclick="closeAdminPanel()" style="width:32px;height:32px;border-radius:50%;background:var(--bg-elevated);border:none;color:var(--text-muted);font-size:1.1rem;cursor:pointer;">✕</button>
+    </div>
+    <div id="adminLoginSection">
+      <input id="adminPassword" type="password" placeholder="كلمة السر" style="background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:14px;padding:12px 16px;color:var(--text-primary);font-family:inherit;font-size:0.9rem;width:100%;outline:none;margin-bottom:12px;" />
+      <button onclick="adminLogin()" style="background:var(--green-main);border:none;border-radius:14px;padding:12px;color:#000;font-family:inherit;font-size:0.9rem;font-weight:900;cursor:pointer;width:100%;">دخول</button>
+    </div>
+    <div id="adminContent" style="display:none;flex-direction:column;gap:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <button onclick="adminTab('pending')" id="tabBtnPending" style="background:#00e67618;border:2px solid #00e676;border-radius:10px;padding:9px;color:var(--green-main);font-family:inherit;font-size:0.78rem;font-weight:800;cursor:pointer;">⏳ الطلبات</button>
+        <button onclick="adminTab('approved')" id="tabBtnApproved" style="background:var(--bg-elevated);border:2px solid var(--border-subtle);border-radius:10px;padding:9px;color:var(--text-secondary);font-family:inherit;font-size:0.78rem;font-weight:800;cursor:pointer;">✏️ تعديل الصيدليات</button>
+      </div>
+      <div id="tabPending" style="display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);">طلبات بانتظار الموافقة:</div>
+        <div id="pendingList" style="display:flex;flex-direction:column;gap:10px;"></div>
+      </div>
+      <div id="tabApproved" style="display:none;flex-direction:column;gap:10px;">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);">الصيدليات المعتمدة — تعديل التوقيت:</div>
+        <div id="approvedEditList" style="display:flex;flex-direction:column;gap:10px;">
+          <button onclick="loadApprovedForEdit()" style="background:var(--green-main);border:none;border-radius:10px;padding:10px;color:#000;font-weight:800;font-size:0.85rem;cursor:pointer;font-family:inherit;">📋 تحميل الصيدليات</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Fullscreen Satellite Map Picker ── -->
+<div id="fullMapOverlay" style="display:none;position:fixed;inset:0;z-index:99999;">
+
+  <!-- الخريطة في الخلفية فقط -->
+  <div id="fullPickerMap" style="position:absolute;inset:0;z-index:1;"></div>
+
+  <!-- شريط علوي ثابت فوق الخريطة تماماً -->
+  <div style="position:absolute;top:0;left:0;right:0;z-index:1000;pointer-events:auto;">
+
+    <!-- صف الإغلاق -->
+    <div style="display:flex;align-items:center;gap:10px;padding:12px 14px 8px;background:#000000dd;">
+      <button id="fullMapCloseBtn" onclick="closeFullMap()"
+        style="width:44px;height:44px;border-radius:50%;background:#ff3b3b;border:none;color:#fff;font-size:1.2rem;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 10px #00000080;">✕</button>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:0.9rem;font-weight:800;color:#fff;">🛰️ اختيار موقع الصيدلية</div>
+        <div style="font-size:0.68rem;color:#ffffff80;">اضغط على الخريطة لتحديد الموقع</div>
+      </div>
+    </div>
+
+    <!-- شريط البحث -->
+    <div style="display:flex;gap:8px;padding:8px 14px 12px;background:#000000cc;">
+      <input id="fullMapSearchInput" type="text" placeholder="🔍 ابحث عن مدينة أو حي أو منطقة..."
+        style="flex:1;background:#1a1a2e;border:1.5px solid #ffffff30;border-radius:12px;padding:11px 14px;color:#fff;font-family:inherit;font-size:0.88rem;outline:none;"
+        onkeydown="if(event.key==='Enter') searchOnFullMap()"
+        onfocus="this.style.borderColor='#00e676'" onblur="this.style.borderColor='#ffffff30'" />
+      <button onclick="searchOnFullMap()"
+        style="background:#00e676;border:none;border-radius:12px;padding:11px 16px;color:#000;font-family:inherit;font-size:0.88rem;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+        بحث
+      </button>
+    </div>
+
+    <!-- رسالة البحث -->
+    <div id="fullMapSearchStatus" style="display:none;margin:0 14px 8px;background:#1a1a2eee;border:1px solid #ffffff20;border-radius:10px;padding:8px 12px;font-size:0.75rem;font-weight:700;color:#fff;"></div>
+  </div>
+
+  <!-- تعليمة وسط الشاشة -->
+  <div id="fullMapHint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:500;background:#000000cc;border:1.5px solid #00e67650;border-radius:18px;padding:16px 22px;text-align:center;pointer-events:none;">
+    <div style="font-size:2rem;margin-bottom:6px;">👆</div>
+    <div style="font-size:0.85rem;font-weight:700;color:#fff;">اضغط على موقع الصيدلية</div>
+    <div style="font-size:0.7rem;color:#ffffff70;margin-top:4px;">أو ابحث بالاسم في الأعلى</div>
+  </div>
+
+  <!-- شريط التأكيد السفلي -->
+  <div id="fullMapBar" style="display:none;position:absolute;bottom:0;left:0;right:0;z-index:1000;padding:14px 14px 28px;background:#000000dd;pointer-events:auto;">
+    <div id="fullMapCoordsText" style="font-size:0.78rem;font-weight:700;color:#00e676;text-align:center;margin-bottom:10px;direction:ltr;"></div>
+    <button onclick="confirmFullMap()"
+      style="background:linear-gradient(135deg,#00c853,#00e676);border:none;border-radius:16px;padding:15px;color:#000;font-family:inherit;font-size:1rem;font-weight:900;cursor:pointer;width:100%;box-shadow:0 4px 20px #00e67650;">
+      ✅ تأكيد الموقع
+    </button>
+  </div>
+
+</div>
+
+</body>
+</html>
