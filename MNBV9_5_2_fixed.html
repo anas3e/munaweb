@@ -2436,9 +2436,9 @@ function closeAddPharmacyModal() {
   const cityEl = document.getElementById('addCity');
   if (cityEl) cityEl.selectedIndex = 0;
   const closeTimeEl = document.getElementById('addCloseTime');
-  if (closeTimeEl) closeTimeEl.value = '07:00';
+  if (closeTimeEl) closeTimeEl.value = '';
   const openTimeEl = document.getElementById('addOpenTime');
-  if (openTimeEl) openTimeEl.value = '21:00';
+  if (openTimeEl) openTimeEl.value = '';
   // reset map picker
   if (fullPickerMap) { fullPickerMap.remove(); fullPickerMap = null; fullPickerMarker = null; }
   fullPickerPending = { lat: null, lng: null };
@@ -2579,8 +2579,12 @@ async function submitPharmacy() {
   const cityEl    = document.getElementById('addCity');
   const city      = cityEl.options[cityEl.selectedIndex]?.value || '';
   const type      = document.getElementById('addType').value;
-  const openTime  = document.getElementById('addOpenTime').value || '21:00';
-  const closeTime = document.getElementById('addCloseTime').value || '07:00';
+  const openTime  = document.getElementById('addOpenTime').value;
+  const closeTime = document.getElementById('addCloseTime').value;
+  if (!openTime || !closeTime) {
+    showToast('⚠️ يرجى تحديد وقت البدء والانتهاء!');
+    return;
+  }
   const latVal    = document.getElementById('addLat').value.trim();
   const lngVal    = document.getElementById('addLng').value.trim();
   const address   = document.getElementById('addAddress')?.value.trim() || '';
@@ -2894,6 +2898,58 @@ function adminTab(tab) {
     : 'background:#00e67618;border:2px solid #00e676;border-radius:10px;padding:9px;color:var(--green-main);font-family:inherit;font-size:0.78rem;font-weight:800;cursor:pointer;';
 }
 
+async function bulkFixAllTimes() {
+  const openTime  = document.getElementById('bulkOpenTime').value  || '21:00';
+  const closeTime = document.getElementById('bulkCloseTime').value || '06:00';
+  const statusEl  = document.getElementById('bulkStatus');
+
+  statusEl.style.display = 'block';
+  statusEl.style.background = '#1a2535';
+  statusEl.style.color = 'var(--text-muted)';
+  statusEl.textContent = '⏳ جاري التحميل...';
+
+  try {
+    // جلب كل الصيدليات المعتمدة
+    const snap = await db.collection('pharmacies').where('status','==','approved').get();
+    if (snap.empty) {
+      statusEl.style.background = '#ff525215';
+      statusEl.style.color = '#ff5252';
+      statusEl.textContent = '❌ لا توجد صيدليات معتمدة';
+      return;
+    }
+
+    // تحديث كل الصيدليات المعتمدة
+    const toFix = [];
+    snap.forEach(doc => toFix.push(doc.id));
+
+    statusEl.textContent = `⏳ جاري تحديث ${toFix.length} صيدلية... لا تغلق النافذة`;
+
+    // تحديث دفعي باستخدام batch
+    const CHUNK = 400; // Firestore batch limit ~500
+    for (let i = 0; i < toFix.length; i += CHUNK) {
+      const batch = db.batch();
+      toFix.slice(i, i + CHUNK).forEach(id => {
+        const ref = db.collection('pharmacies').doc(id);
+        batch.update(ref, { openTime, closeTime });
+      });
+      await batch.commit();
+    }
+
+    statusEl.style.background = '#00e67612';
+    statusEl.style.color = 'var(--green-main)';
+    statusEl.textContent = `✅ تم تحديث ${toFix.length} صيدلية! أعد تشغيل التطبيق لترى التغييرات.`;
+    showToast(`✅ تم إصلاح ${toFix.length} صيدلية!`);
+
+    // إعادة تحميل البيانات في التطبيق
+    setTimeout(() => loadApprovedPharmacies(), 1000);
+
+  } catch(e) {
+    statusEl.style.background = '#ff525215';
+    statusEl.style.color = '#ff5252';
+    statusEl.textContent = '❌ خطأ: ' + e.message;
+  }
+}
+
 async function loadApprovedForEdit() {
   const listEl = document.getElementById('approvedEditList');
   listEl.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;padding:8px;">⏳ جاري التحميل...</div>';
@@ -3144,11 +3200,11 @@ if ('serviceWorker' in navigator) {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div style="display:flex;flex-direction:column;gap:4px;">
           <label style="font-size:0.72rem;color:var(--text-muted);">وقت البدء</label>
-          <input id="addOpenTime" type="time" value="21:00" style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:13px 16px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;width:100%;outline:none;" />
+          <input id="addOpenTime" type="time" placeholder="--:--" required style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:13px 16px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;width:100%;outline:none;" />
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;">
           <label style="font-size:0.72rem;color:var(--text-muted);">وقت الانتهاء</label>
-          <input id="addCloseTime" type="time" value="07:00" style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:13px 16px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;width:100%;outline:none;" />
+          <input id="addCloseTime" type="time" placeholder="--:--" required style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:14px;padding:13px 16px;color:var(--text-primary);font-family:inherit;font-size:0.95rem;width:100%;outline:none;" />
         </div>
       </div>
     </div>
@@ -3235,8 +3291,33 @@ if ('serviceWorker' in navigator) {
       </div>
       <div id="tabApproved" style="display:none;flex-direction:column;gap:10px;">
         <div style="font-size:0.82rem;font-weight:700;color:var(--text-secondary);">الصيدليات المعتمدة — تعديل التوقيت:</div>
+
+        <!-- إصلاح دفعي سريع -->
+        <div style="background:#00e67610;border:1.5px solid #00e67640;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;">
+          <div style="font-size:0.78rem;font-weight:800;color:var(--green-main);">⚡ إصلاح الكل دفعة واحدة</div>
+          <div style="font-size:0.7rem;color:var(--text-muted);">يُطبَّق على <strong style="color:var(--green-main);">كل</strong> الصيدليات المعتمدة — حدد التوقيت الصحيح أولاً</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <label style="font-size:0.68rem;color:var(--text-muted);">وقت البدء الافتراضي</label>
+              <input id="bulkOpenTime" type="time" value="21:00"
+                style="background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px;color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;outline:none;" />
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <label style="font-size:0.68rem;color:var(--text-muted);">وقت الانتهاء الافتراضي</label>
+              <input id="bulkCloseTime" type="time" value="06:00"
+                style="background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:8px;padding:8px 10px;color:var(--text-primary);font-family:inherit;font-size:0.88rem;width:100%;outline:none;" />
+            </div>
+          </div>
+          <button onclick="bulkFixAllTimes()"
+            style="background:linear-gradient(135deg,#00c853,#00e676);border:none;border-radius:10px;padding:11px;color:#000;font-weight:900;font-size:0.85rem;cursor:pointer;font-family:inherit;width:100%;">
+            🚀 تطبيق على كل الصيدليات بدون توقيت
+          </button>
+          <div id="bulkStatus" style="display:none;font-size:0.78rem;font-weight:700;text-align:center;padding:6px;border-radius:8px;"></div>
+        </div>
+
+        <div style="font-size:0.78rem;font-weight:700;color:var(--text-secondary);">أو تعديل كل صيدلية بشكل منفرد:</div>
         <div id="approvedEditList" style="display:flex;flex-direction:column;gap:10px;">
-          <button onclick="loadApprovedForEdit()" style="background:var(--green-main);border:none;border-radius:10px;padding:10px;color:#000;font-weight:800;font-size:0.85rem;cursor:pointer;font-family:inherit;">📋 تحميل الصيدليات</button>
+          <button onclick="loadApprovedForEdit()" style="background:var(--bg-elevated);border:1.5px solid var(--border-subtle);border-radius:10px;padding:10px;color:var(--text-secondary);font-weight:800;font-size:0.82rem;cursor:pointer;font-family:inherit;">📋 تحميل الصيدليات للتعديل الفردي</button>
         </div>
       </div>
     </div>
